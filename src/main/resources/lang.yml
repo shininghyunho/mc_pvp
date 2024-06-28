@@ -1,0 +1,111 @@
+PVP_CANCEL_BY_LOGOUT:
+  text:
+    - "%player%님이 로그아웃해 PVP가 취소되었습니다"
+  title: ""
+  subtitle: ""
+REJECT_REQUEST_RECEIVER:
+  text:
+    - "%player%님의 PVP 신청을 거절했습니다"
+  title: ""
+  subtitle: ""
+REJECT_REQUEST_SENDER:
+  text:
+    - "%player%님에게 PVP 신청을 거절당했습니다"
+  title: ""
+  subtitle: ""
+FINISH_WINNER:
+  text:
+    - "PVP에서 승리했습니다"
+  title: ""
+  subtitle: ""
+FINISH_LOSER:
+  text:
+    - "PVP에서 패배했습니다"
+  title: ""
+  subtitle: ""
+ACCEPT_INVITATION:
+  text:
+    - "§l%accept% §r를 클릭하여 PVP 신청을 수락 하세요"
+    - "§l%refuse_i% §r를 클릭하여 PVP 신청을 거절 하세요"
+  title: ""
+  subtitle: ""
+ASK_RETRY:
+  text:
+    - "다시 하시겠습니까?"
+  title: ""
+  subtitle: ""
+REJECT_RETRY:
+  text:
+    - "%player%님이 다시하기를 거절했습니다"
+  title: ""
+  subtitle: ""
+ACCEPT_RETRY:
+  text:
+    - "%player%님이 다시하기를 수락했습니다"
+  title: ""
+  subtitle: ""
+WAITING_STARTING_GAME:
+  text:
+    - "%seconds%초 후에 경기가 시작됩니다"
+  title: ""
+  subtitle: ""
+START_GAME:
+  text:
+    - "경기가 시작되었습니다!"
+  title: ""
+  subtitle: ""
+WAITING_PLAYER:
+  text:
+    - "%player%의 접속을 기다리는 중입니다"
+  title: "%player%의 접속을 기다리는 중입니다"
+  subtitle: "[%second%초]"
+BROADCAST_REMAIN_COUNT:
+  text:
+    - "게임이 %second%초 남았습니다"
+  title: ""
+  subtitle: ""
+DRAW:
+  text:
+    - "게임이 무승부 처리되었습니다"
+  title: ""
+  subtitle: ""
+RESTART:
+  text:
+    - "%player%님이 재접속하여 게임이 다시 시작됩니다"
+  title: ""
+  subtitle: ""
+AVAILABLE_TO_GET_REWARD:
+  text:
+    - "받을 수 있는 연승보상이 있습니다"
+  title: ""
+  subtitle: ""
+NEED_TO_EMPTY_SPACE:
+  text:
+    - "인벤토리를 %n%칸 이상 비워주세요"
+  title: ""
+  subtitle: ""
+RANK_FORMAT:
+  text:
+    - "%rank%등 - %player% - %straight%연승"
+  title: ""
+  subtitle: ""
+NON_AVAILABLE_PLACE:
+  text:
+    - "남아있는 경기장이 없습니다"
+  title: ""
+  subtitle: ""
+ALREADY_PVP:
+  text:
+    - "해당 플레이어는 이미 PVP중입니다"
+  title: ""
+  subtitle: ""
+ALREADY_INVITING:
+  text:
+    - "해당 플레이어는 이미 초대를 받은 플레이어입니다"
+  title: ""
+  subtitle: ""
+ALREADY_PVP_SELF:
+  text:
+    - "당신은 이미 PVP중입니다"
+  title: ""
+  subtitle: ""

@@ -1,0 +1,4 @@
+name: UtilaPVP
+version: '${version}'
+main: kr.utila.pvp.Main
+api-version: 1.20
