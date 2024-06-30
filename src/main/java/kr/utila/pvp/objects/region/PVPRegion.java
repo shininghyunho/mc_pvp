@@ -18,8 +18,10 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class PVPRegion implements Writable {
+    Logger logger = Logger.getLogger("PVPRegion");
 
     private static final File DIRECTORY = new File(Main.getInstance().getDataFolder(), "pvp_regions");
 
@@ -33,6 +35,7 @@ public class PVPRegion implements Writable {
     private boolean retry;
     private Map<TeamType, Boolean> acceptingData;
     private int remainSecond;
+    private List<String> commands;
 
     public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2) {
         this.name = name;
@@ -42,7 +45,8 @@ public class PVPRegion implements Writable {
         this.regionPlayer = new HashMap<>();
     }
 
-    public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2, Map<TeamType, TeamRegion> regionData, Map<TeamType, String> regionPlayer, boolean gaming, int remainSecond) {
+    public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2, Map<TeamType, TeamRegion> regionData, Map<TeamType, String> regionPlayer, boolean gaming, int remainSecond
+    ,List<String> commands) {
         this.name = name;
         this.pos1 = pos1;
         this.pos2 = pos2;
@@ -50,6 +54,7 @@ public class PVPRegion implements Writable {
         this.regionPlayer = regionPlayer;
         this.gaming = gaming;
         this.remainSecond = remainSecond;
+        this.commands = commands;
     }
 
     public void setTeamToPlayer(TeamType teamType, Player player) {
@@ -339,6 +344,18 @@ public class PVPRegion implements Writable {
             yamlConfiguration.save(PATH);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    // commands 실행
+    public void executeCommands() {
+        for (String command : commands) {
+            try {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            } catch (Exception e) {
+                // 오류 로그 발생, 해당 Region 의 이름과 함께 출력
+                logger.warning("명령어 오류 발생. Region: "+name+" Command: "+command+" Error: "+e.getMessage());
+            }
         }
     }
 

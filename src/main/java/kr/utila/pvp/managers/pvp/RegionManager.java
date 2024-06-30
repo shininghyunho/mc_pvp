@@ -116,6 +116,11 @@ public class RegionManager extends Manager {
         for (File file : DIRECTORY.listFiles()) {
             YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(file);
             String name = yamlConfiguration.getString("name");
+            // load commands
+            List<String> commands = yamlConfiguration.contains("commands")
+                    ? yamlConfiguration.getStringList("commands")
+                    : new ArrayList<>(List.of("/예시명령어1","/예시명령어2"));
+
             LocationDTO pos1 = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("pos1"));
             LocationDTO pos2 = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("pos2"));
             Map<TeamType, PVPRegion.TeamRegion> regionData = new HashMap<>();
@@ -136,8 +141,6 @@ public class RegionManager extends Manager {
                     }
                     regionData.put(teamType, new PVPRegion.TeamRegion(teamType, startingLocation, itemPackage));
                 }
-            } else {
-                PVP_REGIONS.put(name, new PVPRegion(name, pos1, pos2));
             }
             Map<TeamType, String> regionPlayer = new HashMap<>();
             int remainSecond = 0;
@@ -150,7 +153,8 @@ public class RegionManager extends Manager {
                 }
                 remainSecond = yamlConfiguration.getInt("remainSecond");
             }
-            PVP_REGIONS.put(name, new PVPRegion(name, pos1, pos2, regionData, regionPlayer, gaming, remainSecond));
+            // PVP_REGIONS 에 추가
+            PVP_REGIONS.put(name, new PVPRegion(name, pos1, pos2, regionData, regionPlayer, gaming, remainSecond, commands));
         }
     }
 }
