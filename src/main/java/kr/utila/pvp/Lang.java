@@ -31,8 +31,12 @@ public class Lang {
     public static LangFormat AVAILABLE_TO_GET_REWARD;
     public static LangFormat NEED_TO_EMPTY_SPACE;
     public static LangFormat RANK_FORMAT;
+    // START
     public static LangFormat START_GAME;
     public static LangFormat WAITING_STARTING_GAME;
+    // RESET
+    public static LangFormat RESET_GAME;
+    public static LangFormat WAITING_RESET_GAME;
     public static LangFormat NON_AVAILABLE_PLACE;
     public static LangFormat ALREADY_PVP;
     public static LangFormat ALREADY_INVITING;
@@ -59,6 +63,8 @@ public class Lang {
         RANK_FORMAT = LangFormat.get(yamlConfiguration.getConfigurationSection("RANK_FORMAT"));
         START_GAME = LangFormat.get(yamlConfiguration.getConfigurationSection("START_GAME"));
         WAITING_STARTING_GAME = LangFormat.get(yamlConfiguration.getConfigurationSection("WAITING_STARTING_GAME"));
+        RESET_GAME = LangFormat.get(yamlConfiguration.getConfigurationSection("RESET_GAME"));
+        WAITING_RESET_GAME = LangFormat.get(yamlConfiguration.getConfigurationSection("WAITING_RESET_GAME"));
         NON_AVAILABLE_PLACE = LangFormat.get(yamlConfiguration.getConfigurationSection("NON_AVAILABLE_PLACE"));
         ALREADY_PVP = LangFormat.get(yamlConfiguration.getConfigurationSection("ALREADY_PVP"));
         ALREADY_INVITING = LangFormat.get(yamlConfiguration.getConfigurationSection("ALREADY_INVITING"));

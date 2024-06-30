@@ -400,12 +400,50 @@ public class PVPRegion implements Writable {
             player.setFoodLevel(20);
             player.teleport(teamRegion.getStartingLocation().toLocation());
             players.add(player);
-
         }
         delaying = true;
         gaming = true;
         remainSecond = Config.GAME_TIME;
 
+        // 게임 초기화
+        resetGame(players);
+
+        // 게임 시작전
+        beforeStart(players);
+    }
+    private void resetGame(List<Player> players) {
+        executeCommands();
+        resetGameTimer(players);
+    }
+    private void resetGameTimer(List<Player> players) {
+        int index = 0;
+        for (int i = Config.GAME_RESET_TIME; i >= 0; i--) {
+            int finalI = i;
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (!gaming) {
+                        return;
+                    }
+                    if (finalI == 0) {
+                        for (Player player : players) {
+                            Lang.send(player, Lang.RESET_GAME, s -> s);
+                        }
+                        prepareGame(false);
+                    } else {
+                        for (Player player : players) {
+                            Lang.send(player, Lang.WAITING_RESET_GAME, s -> s.replaceAll("%seconds%", finalI + ""));
+                        }
+                    }
+                }
+            }.runTaskLater(Main.getInstance(), 20 * index);
+            index++;
+        }
+    }
+    private void beforeStart(List<Player> players) {
+        beforeStartTimer(players);
+    }
+    private void beforeStartTimer(List<Player> players) {
         int index = 0;
         for (int i = Config.START_COOLTIME; i >= 0; i--) {
             int finalI = i;

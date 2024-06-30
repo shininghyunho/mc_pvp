@@ -59,6 +59,16 @@ WAITING_PLAYER:
     - "%player%의 접속을 기다리는 중입니다"
   title: "%player%의 접속을 기다리는 중입니다"
   subtitle: "[%second%초]"
+WAITING_RESET_GAME:
+  text:
+    - "게임 초기화 중 %seconds%초"
+  title: ""
+  subtitle: ""
+RESET_GAME:
+  text:
+    - "경기가 초기화되었습니다!"
+  title: ""
+  subtitle: ""
 BROADCAST_REMAIN_COUNT:
   text:
     - "게임이 %second%초 남았습니다"
