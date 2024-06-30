@@ -25,10 +25,6 @@ dependencies {
     compileOnly 'me.clip:placeholderapi:2.11.6'
 }
 
-jar {
-    destinationDir = file("C:/Users/p8575/Desktop/Servers/1.20.1/plugins")
-}
-
 def targetJavaVersion = 17
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)

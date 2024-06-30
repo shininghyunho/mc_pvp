@@ -329,6 +329,12 @@ public class PVPRegion implements Writable {
             }
             yamlConfiguration.set("remainSecond", remainSecond);
         }
+        // 재시작, 종료시  실행될 명령어
+        // commands 설정값이 없으면 새로 생성
+        String commands="commands";
+        if(!yamlConfiguration.contains(commands)) {
+            yamlConfiguration.createSection(commands);
+        }
         try {
             yamlConfiguration.save(PATH);
         } catch (Exception e) {
