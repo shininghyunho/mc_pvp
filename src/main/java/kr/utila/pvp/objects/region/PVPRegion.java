@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 public class PVPRegion implements Writable {
     Logger logger = Logger.getLogger("PVPRegion");
+    private static final String COMMANDS="commands";
 
     private static final File DIRECTORY = new File(Main.getInstance().getDataFolder(), "pvp_regions");
 
@@ -336,9 +337,9 @@ public class PVPRegion implements Writable {
         }
         // 재시작, 종료시  실행될 명령어
         // commands 설정값이 없으면 새로 생성
-        String commands="commands";
-        if(!yamlConfiguration.contains(commands)) {
-            yamlConfiguration.createSection(commands);
+        if(!yamlConfiguration.contains(COMMANDS)) {
+            // List<String> 섹션을 만들고 예제도 같이 넣어준다.
+            yamlConfiguration.set(COMMANDS, new ArrayList<>(List.of("명령어1","명령어2")));
         }
         try {
             yamlConfiguration.save(PATH);

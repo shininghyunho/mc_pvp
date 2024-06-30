@@ -43,6 +43,4 @@ public class LocationDTO {
         section.set("y", y);
         section.set("z", z);
     }
-
-
 }
