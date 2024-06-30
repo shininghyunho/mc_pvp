@@ -70,107 +70,11 @@ public class PVPRegion implements Writable {
     }
 
     public void restart() {
-        List<Player> players = new ArrayList<>();
-        for (Map.Entry<TeamType, String> entry : regionPlayer.entrySet()) {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(entry.getValue()));
-            if (!offlinePlayer.isOnline()) {
-                cancel(offlinePlayer);
-                return;
-            }
-            TeamRegion teamRegion = regionData.get(entry.getKey());
-            Player player = offlinePlayer.getPlayer();
-            player.getInventory().clear();
-            if (teamRegion.getItemPackage() != null) {
-                for (ItemStack itemStack : teamRegion.getItemPackage()) {
-                    player.getInventory().addItem(itemStack);
-                }
-            }
-            player.setHealth(player.getMaxHealth());
-            player.setFoodLevel(20);
-            player.teleport(teamRegion.getStartingLocation().toLocation());
-            players.add(player);
-        }
-        delaying = true;
-        gaming = true;
-        remainSecond = Config.GAME_TIME;
-        int index = 0;
-        for (int i = Config.START_COOLTIME; i >= 0; i--) {
-            int finalI = i;
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (!gaming) {
-                        return;
-                    }
-                    if (finalI == 0) {
-                        delaying = false;
-                        for (Player player : players) {
-                            Lang.send(player, Lang.START_GAME, s -> {
-                                return s;
-                            });
-                        }
-                    } else {
-                        for (Player player : players) {
-                            Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", finalI + ""));
-                        }
-                    }
-                }
-            }.runTaskLater(Main.getInstance(), 20 * index);
-            index++;
-        }
+        prepareGame(false);
     }
 
     public void start() {
-        List<Player> players = new ArrayList<>();
-        for (Map.Entry<TeamType, String> entry : regionPlayer.entrySet()) {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(entry.getValue()));
-            if (!offlinePlayer.isOnline()) {
-                cancel(offlinePlayer);
-                return;
-            }
-            User user = UserManager.getInstance().get(entry.getValue());
-            user.start(name);
-            TeamRegion teamRegion = regionData.get(entry.getKey());
-            Player player = offlinePlayer.getPlayer();
-            player.getInventory().clear();
-            if (teamRegion.getItemPackage() != null) {
-                for (ItemStack itemStack : teamRegion.getItemPackage()) {
-                    player.getInventory().addItem(itemStack);
-                }
-            }
-            player.setHealth(player.getMaxHealth());
-            player.setFoodLevel(20);
-            player.teleport(teamRegion.getStartingLocation().toLocation());
-            players.add(player);
-        }
-        delaying = true;
-        gaming = true;
-        remainSecond = Config.GAME_TIME;
-        int index = 0;
-        for (int i = Config.START_COOLTIME; i >= 0; i--) {
-            int finalI = i;
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (!gaming) {
-                        return;
-                    }
-                    if (finalI == 0) {
-                        delaying = false;
-                        for (Player player : players) {
-                            Lang.send(player, Lang.START_GAME, s -> {
-                                return s;
-                            });
-                        }
-                    } else {
-                        for (Player player : players) {
-                            Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", finalI + ""));
-                        }
-                    }
-                }
-            }.runTaskLater(Main.getInstance(), 20 * index);
-            index++;
-        }
+        prepareGame(true);
     }
 
     public void waitPlayer(Player quitPlayer) {
@@ -472,4 +376,60 @@ public class PVPRegion implements Writable {
         }
     }
 
+    private void prepareGame(boolean isNewGame) {
+        List<Player> players = new ArrayList<>();
+        for (Map.Entry<TeamType, String> entry : regionPlayer.entrySet()) {
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(entry.getValue()));
+            if (!offlinePlayer.isOnline()) {
+                cancel(offlinePlayer);
+                return;
+            }
+            if (isNewGame) {
+                User user = UserManager.getInstance().get(entry.getValue());
+                user.start(name);
+            }
+            TeamRegion teamRegion = regionData.get(entry.getKey());
+            Player player = offlinePlayer.getPlayer();
+            player.getInventory().clear();
+            if (teamRegion.getItemPackage() != null) {
+                for (ItemStack itemStack : teamRegion.getItemPackage()) {
+                    player.getInventory().addItem(itemStack);
+                }
+            }
+            player.setHealth(player.getMaxHealth());
+            player.setFoodLevel(20);
+            player.teleport(teamRegion.getStartingLocation().toLocation());
+            players.add(player);
+
+        }
+        delaying = true;
+        gaming = true;
+        remainSecond = Config.GAME_TIME;
+
+        int index = 0;
+        for (int i = Config.START_COOLTIME; i >= 0; i--) {
+            int finalI = i;
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (!gaming) {
+                        return;
+                    }
+                    if (finalI == 0) {
+                        delaying = false;
+                        for (Player player : players) {
+                            Lang.send(player, Lang.START_GAME, s -> {
+                                return s;
+                            });
+                        }
+                    } else {
+                        for (Player player : players) {
+                            Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", finalI + ""));
+                        }
+                    }
+                }
+            }.runTaskLater(Main.getInstance(), 20 * index);
+            index++;
+        }
+    }
 }
