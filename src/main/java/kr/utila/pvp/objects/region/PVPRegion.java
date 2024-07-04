@@ -8,6 +8,8 @@ import kr.utila.pvp.managers.pvp.RewardManager;
 import kr.utila.pvp.objects.LocationDTO;
 import kr.utila.pvp.objects.User;
 import kr.utila.pvp.objects.Writable;
+import kr.utila.pvp.utils.BossBarTimer;
+import kr.utila.pvp.utils.BossBarTimerManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
@@ -26,11 +28,11 @@ public class PVPRegion implements Writable {
 
     private static final File DIRECTORY = new File(Main.getInstance().getDataFolder(), "pvp_regions");
 
-    private String name;
-    private LocationDTO pos1;
-    private LocationDTO pos2;
-    private Map<TeamType, TeamRegion> regionData;
-    private Map<TeamType, String> regionPlayer;
+    private final String name;
+    private final LocationDTO pos1;
+    private final LocationDTO pos2;
+    private final Map<TeamType, TeamRegion> regionData;
+    private final Map<TeamType, String> regionPlayer;
     private boolean gaming;
     private boolean delaying;
     private boolean retry;
@@ -71,10 +73,12 @@ public class PVPRegion implements Writable {
 
     public void restart() {
         prepareGame(false);
+        startBossBarTimer();
     }
 
     public void start() {
         prepareGame(true);
+        startBossBarTimer();
     }
 
     public void waitPlayer(Player quitPlayer) {
@@ -181,6 +185,8 @@ public class PVPRegion implements Writable {
     }
 
     public void cancel(OfflinePlayer quitPlayer) {
+        // 게임 중단
+        stopBossBarTimer();
         gaming = false;
         delaying = false;
         Player onlinePlayer;
@@ -197,6 +203,8 @@ public class PVPRegion implements Writable {
     }
 
     public void cancel(Player rejectingPlayer) {
+        // 게임 중단
+        stopBossBarTimer();
         gaming = false;
         delaying = false;
         for (String uuid : regionPlayer.values()) {
@@ -276,9 +284,6 @@ public class PVPRegion implements Writable {
         return retry;
     }
 
-    public void setRetry(boolean retry) {
-        this.retry = retry;
-    }
 
     public Map<TeamType, Boolean> getAcceptingData() {
         return acceptingData;
@@ -288,48 +293,16 @@ public class PVPRegion implements Writable {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public LocationDTO getPos1() {
-        return pos1;
-    }
-
-    public void setPos1(LocationDTO pos1) {
-        this.pos1 = pos1;
-    }
-
-    public LocationDTO getPos2() {
-        return pos2;
-    }
-
-    public void setPos2(LocationDTO pos2) {
-        this.pos2 = pos2;
-    }
-
     public Map<TeamType, TeamRegion> getRegionData() {
         return regionData;
-    }
-
-    public void setRegionData(Map<TeamType, TeamRegion> regionData) {
-        this.regionData = regionData;
     }
 
     public Map<TeamType, String> getRegionPlayer() {
         return regionPlayer;
     }
 
-    public void setRegionPlayer(Map<TeamType, String> regionPlayer) {
-        this.regionPlayer = regionPlayer;
-    }
-
     public boolean isGaming() {
         return gaming;
-    }
-
-    public void setGaming(boolean gaming) {
-        this.gaming = gaming;
     }
 
     public boolean isDelaying() {
@@ -349,14 +322,6 @@ public class PVPRegion implements Writable {
             this.teamType = teamType;
             this.startingLocation = startingLocation;
             this.itemPackage = itemPackage;
-        }
-
-        public TeamType getTeamType() {
-            return teamType;
-        }
-
-        public void setTeamType(TeamType teamType) {
-            this.teamType = teamType;
         }
 
         public LocationDTO getStartingLocation() {
@@ -469,5 +434,19 @@ public class PVPRegion implements Writable {
             }.runTaskLater(Main.getInstance(), 20 * index);
             index++;
         }
+    }
+    // boss bar timer
+    public void startBossBarTimer() {
+        BossBarTimer bossBarTimer = BossBarTimerManager.getTimer(name, Main.getInstance(), Config.GAME_TIME);
+        // add all region players
+        for (String uuid : regionPlayer.values()) {
+            Player player = Bukkit.getPlayer(UUID.fromString(uuid));
+            bossBarTimer.addPlayer(player);
+        }
+        bossBarTimer.start();
+    }
+
+    public void stopBossBarTimer() {
+        BossBarTimerManager.removeTimer(name);
     }
 }

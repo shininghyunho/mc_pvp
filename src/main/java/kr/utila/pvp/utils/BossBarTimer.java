@@ -9,8 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class BossBarTimer {
     private final JavaPlugin plugin;
@@ -55,6 +54,17 @@ public class BossBarTimer {
         }.runTaskTimer(plugin, 0, 20);
     }
 
+    public void stop() {
+        if(timer == null) {
+            return;
+        }
+        bossBar.setVisible(false);
+        timer.cancel();
+        for(Player player : players) {
+            removePlayer(player);
+        }
+    }
+
     private void prepareTimer() {
         timeLeft = totalTime;
         bossBar.setProgress(1.0);
@@ -65,16 +75,5 @@ public class BossBarTimer {
         timeLeft--;
         bossBar.setProgress((double) timeLeft / totalTime);
         bossBar.setTitle("Time Left: " + timeLeft);
-    }
-
-    public void stop() {
-        if(timer == null) {
-            return;
-        }
-        bossBar.setVisible(false);
-        timer.cancel();
-        for(Player player : players) {
-            removePlayer(player);
-        }
     }
 }
