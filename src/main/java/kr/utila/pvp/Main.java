@@ -1,5 +1,6 @@
 package kr.utila.pvp;
 
+import kr.utila.pvp.commands.BossBarCommand;
 import kr.utila.pvp.commands.PVPAdminCommand;
 import kr.utila.pvp.commands.PVPCommand;
 import kr.utila.pvp.libraries.SimpleInventoryHolder;
@@ -50,6 +51,7 @@ public final class Main extends JavaPlugin {
     private void executeCommands() {
         PVPAdminCommand.register();
         PVPCommand.register();
+        BossBarCommand.register();
     }
 
     private void load() {
