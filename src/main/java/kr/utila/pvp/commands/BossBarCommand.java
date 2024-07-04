@@ -6,7 +6,7 @@ import kr.utila.pvp.utils.BossBarTimer;
 import org.bukkit.entity.Player;
 
 public class BossBarCommand {
-    static BossBarTimer timer = new BossBarTimer(Main.getInstance(), 60, 60);
+    static BossBarTimer timer = new BossBarTimer(Main.getInstance(), 60);
     // register() method
     public static void register() {
         new SimpleCommandBuilder("bossbar")

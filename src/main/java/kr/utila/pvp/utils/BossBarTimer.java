@@ -20,10 +20,10 @@ public class BossBarTimer {
     private final Set<Player> players;
     private BukkitTask timer = null;
 
-    public BossBarTimer(JavaPlugin plugin, long totalTime, long timeLeft) {
+    public BossBarTimer(JavaPlugin plugin, long totalTime) {
         this.plugin = plugin;
         this.totalTime = totalTime;
-        this.timeLeft = timeLeft;
+        this.timeLeft = totalTime;
         this.bossBar = Bukkit.createBossBar("Time Left: " + timeLeft, BarColor.GREEN, BarStyle.SOLID);
         this.players = new HashSet<>();
     }
@@ -43,8 +43,7 @@ public class BossBarTimer {
             return;
         }
 
-        bossBar.setProgress((double) timeLeft / totalTime);
-        bossBar.setVisible(true);
+        prepareTimer();
         timer = new BukkitRunnable() {
             @Override
             public void run() {
@@ -54,6 +53,12 @@ public class BossBarTimer {
                 }
             }
         }.runTaskTimer(plugin, 0, 20);
+    }
+
+    private void prepareTimer() {
+        timeLeft = totalTime;
+        bossBar.setProgress(1.0);
+        bossBar.setVisible(true);
     }
 
     private void updateBossBar() {
@@ -68,5 +73,8 @@ public class BossBarTimer {
         }
         bossBar.setVisible(false);
         timer.cancel();
+        for(Player player : players) {
+            removePlayer(player);
+        }
     }
 }
