@@ -342,12 +342,25 @@ public class PVPRegion implements Writable {
     }
 
     private void prepareGame(boolean isNewGame) {
+        List<Player> players = getReadyPlayers(isNewGame);
+        if (players == null) {
+            return;
+        }
+
+        delaying = true;
+        gaming = true;
+        remainSecond = Config.GAME_TIME;
+
+        // 게임 초기화
+        resetGame(players);
+    }
+    private List<Player> getReadyPlayers(boolean isNewGame) {
         List<Player> players = new ArrayList<>();
         for (Map.Entry<TeamType, String> entry : regionPlayer.entrySet()) {
             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(entry.getValue()));
             if (!offlinePlayer.isOnline()) {
                 cancel(offlinePlayer);
-                return;
+                return null;
             }
             if (isNewGame) {
                 User user = UserManager.getInstance().get(entry.getValue());
@@ -366,15 +379,7 @@ public class PVPRegion implements Writable {
             player.teleport(teamRegion.getStartingLocation().toLocation());
             players.add(player);
         }
-        delaying = true;
-        gaming = true;
-        remainSecond = Config.GAME_TIME;
-
-        // 게임 초기화
-        resetGame(players);
-
-        // 게임 시작전
-        beforeStart(players);
+        return players;
     }
     private void resetGame(List<Player> players) {
         executeCommands();
@@ -382,22 +387,23 @@ public class PVPRegion implements Writable {
     }
     private void resetGameTimer(List<Player> players) {
         int index = 0;
-        for (int i = Config.GAME_RESET_TIME; i >= 0; i--) {
-            int finalI = i;
+        for (int time = Config.GAME_RESET_TIME; time >= 0; time--) {
+            int finalTime = time;
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     if (!gaming) {
                         return;
                     }
-                    if (finalI == 0) {
+                    if (finalTime == 0) {
                         for (Player player : players) {
                             Lang.send(player, Lang.RESET_GAME, s -> s);
                         }
-                        prepareGame(false);
+                        // 게임 시작전
+                        beforeStart(players);
                     } else {
                         for (Player player : players) {
-                            Lang.send(player, Lang.WAITING_RESET_GAME, s -> s.replaceAll("%seconds%", finalI + ""));
+                            Lang.send(player, Lang.WAITING_RESET_GAME, s -> s.replaceAll("%seconds%", finalTime + ""));
                         }
                     }
                 }
