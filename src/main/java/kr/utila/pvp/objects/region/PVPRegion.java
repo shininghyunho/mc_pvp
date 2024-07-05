@@ -38,7 +38,7 @@ public class PVPRegion implements Writable {
     private boolean retry;
     private Map<TeamType, Boolean> acceptingData;
     private int remainSecond;
-    private List<String> commands;
+    private List<String> commands = new ArrayList<>();
 
     public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2) {
         this.name = name;
@@ -73,12 +73,10 @@ public class PVPRegion implements Writable {
 
     public void restart() {
         prepareGame(false);
-        startBossBarTimer();
     }
 
     public void start() {
         prepareGame(true);
-        startBossBarTimer();
     }
 
     public void waitPlayer(Player quitPlayer) {
@@ -110,7 +108,7 @@ public class PVPRegion implements Writable {
                             onlineUser.setStraight(onlineUser.getStraight() + 1);
                             offlineUser.setStraight(0);
                             Lang.send(onlinePlayer, Lang.FINISH_WINNER, s -> s);
-                            if (RewardManager.getInstance().get(onlineUser.getStraight()).size() != 0 && !onlineUser.getAcquiredRewards().contains(onlineUser.getStraight())) {
+                            if (!RewardManager.getInstance().get(onlineUser.getStraight()).isEmpty() && !onlineUser.getAcquiredRewards().contains(onlineUser.getStraight())) {
                                 Lang.send(onlinePlayer, Lang.AVAILABLE_TO_GET_REWARD, s -> s);
                                 return;
                             }
@@ -153,7 +151,7 @@ public class PVPRegion implements Writable {
         loseUser.setStraight(0);
         Lang.send(winner, Lang.FINISH_WINNER, s -> s);
         Lang.send(loser, Lang.FINISH_LOSER, s -> s);
-        if (RewardManager.getInstance().get(winUser.getStraight()).size() != 0 && !winUser.getAcquiredRewards().contains(winUser.getStraight())) {
+        if (!RewardManager.getInstance().get(winUser.getStraight()).isEmpty() && !winUser.getAcquiredRewards().contains(winUser.getStraight())) {
             Lang.send(winner, Lang.AVAILABLE_TO_GET_REWARD, s -> s);
             return;
         }
@@ -251,7 +249,7 @@ public class PVPRegion implements Writable {
         // commands 설정값이 없으면 새로 생성
         if(!yamlConfiguration.contains(COMMANDS)) {
             // List<String> 섹션을 만들고 예제도 같이 넣어준다.
-            yamlConfiguration.set(COMMANDS, new ArrayList<>(List.of("명령어1","명령어2")));
+            yamlConfiguration.set(COMMANDS, new ArrayList<>(List.of("tellraw @p \"경기장 초기화 예시\"")));
         }
         try {
             yamlConfiguration.save(PATH);
@@ -425,12 +423,9 @@ public class PVPRegion implements Writable {
                         return;
                     }
                     if (finalI == 0) {
+                        // 경기 시작
                         delaying = false;
-                        for (Player player : players) {
-                            Lang.send(player, Lang.START_GAME, s -> {
-                                return s;
-                            });
-                        }
+                        players.forEach(player -> Lang.send(player, Lang.START_GAME, s -> s));
                     } else {
                         for (Player player : players) {
                             Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", finalI + ""));
@@ -440,16 +435,6 @@ public class PVPRegion implements Writable {
             }.runTaskLater(Main.getInstance(), 20 * index);
             index++;
         }
-    }
-    // boss bar timer
-    public void startBossBarTimer() {
-        BossBarTimer bossBarTimer = BossBarTimerManager.getTimer(name, Main.getInstance(), Config.GAME_TIME);
-        // add all region players
-        for (String uuid : regionPlayer.values()) {
-            Player player = Bukkit.getPlayer(UUID.fromString(uuid));
-            bossBarTimer.addPlayer(player);
-        }
-        bossBarTimer.start();
     }
 
     public void stopBossBarTimer() {

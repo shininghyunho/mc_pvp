@@ -28,13 +28,9 @@ public class BossBarTimer {
     }
 
     public void addPlayer(Player player) {
+        if(player==null) return;
         players.add(player);
         bossBar.addPlayer(player);
-    }
-
-    public void removePlayer(Player player) {
-        players.remove(player);
-        bossBar.removePlayer(player);
     }
 
     public void start() {
@@ -59,10 +55,9 @@ public class BossBarTimer {
             return;
         }
         bossBar.setVisible(false);
+        bossBar.removeAll();
         timer.cancel();
-        for(Player player : players) {
-            removePlayer(player);
-        }
+        players.clear();
     }
 
     private void prepareTimer() {

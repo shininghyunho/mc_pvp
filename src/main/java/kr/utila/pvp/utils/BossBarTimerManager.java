@@ -19,7 +19,10 @@ public class BossBarTimerManager {
     }
 
     public static void removeTimer(String name) {
-        timers.remove(name)
-                .stop();
+        BossBarTimer timer = timers.get(name);
+        if(timer != null) {
+            timer.stop();
+        }
+        timers.remove(name);
     }
 }

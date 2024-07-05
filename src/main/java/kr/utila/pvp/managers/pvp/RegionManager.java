@@ -119,7 +119,7 @@ public class RegionManager extends Manager {
             // load commands
             List<String> commands = yamlConfiguration.contains("commands")
                     ? yamlConfiguration.getStringList("commands")
-                    : new ArrayList<>(List.of("명령어1","명령어2"));
+                    : new ArrayList<>(List.of("tellraw @p \"경기장 초기화 예시\""));
 
             LocationDTO pos1 = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("pos1"));
             LocationDTO pos2 = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("pos2"));
