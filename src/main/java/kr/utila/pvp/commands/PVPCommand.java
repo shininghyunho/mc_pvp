@@ -51,6 +51,10 @@ public class PVPCommand {
                                     player.sendMessage("§c플레이어를 찾을 수 없습니다.");
                                     return false;
                                 }
+                                if(target.getUniqueId().equals(player.getUniqueId())) {
+                                    player.sendMessage("§c자기 자신에게는 신청할 수 없습니다.");
+                                    return false;
+                                }
                                 if (UserManager.getInstance().get(target).getCurrentPVP() != null) {
                                     Lang.send(player, Lang.ALREADY_PVP, s -> s);
                                     return false;
