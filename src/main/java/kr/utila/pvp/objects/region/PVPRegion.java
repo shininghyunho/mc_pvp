@@ -8,8 +8,7 @@ import kr.utila.pvp.managers.pvp.RewardManager;
 import kr.utila.pvp.objects.LocationDTO;
 import kr.utila.pvp.objects.User;
 import kr.utila.pvp.objects.Writable;
-import kr.utila.pvp.utils.BossBarTimer;
-import kr.utila.pvp.utils.BossBarTimerManager;
+import kr.utila.pvp.utils.bossBarTimerUtil.BossBarTimerManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
@@ -384,57 +383,49 @@ public class PVPRegion implements Writable {
         resetGameTimer(players);
     }
     private void resetGameTimer(List<Player> players) {
-        int index = 0;
-        for (int time = Config.GAME_RESET_TIME; time >= 0; time--) {
-            int finalTime = time;
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (!gaming) {
-                        return;
+        int gameResetTime = Config.GAME_RESET_TIME;
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!gaming) {
+                    return;
+                }
+                if (gameResetTime == 0) {
+                    for (Player player : players) {
+                        Lang.send(player, Lang.RESET_GAME, s -> s);
                     }
-                    if (finalTime == 0) {
-                        for (Player player : players) {
-                            Lang.send(player, Lang.RESET_GAME, s -> s);
-                        }
-                        // 게임 시작전
-                        beforeStart(players);
-                    } else {
-                        for (Player player : players) {
-                            Lang.send(player, Lang.WAITING_RESET_GAME, s -> s.replaceAll("%seconds%", finalTime + ""));
-                        }
+                    // 게임 시작전
+                    beforeStart(players);
+                } else {
+                    for (Player player : players) {
+                        Lang.send(player, Lang.WAITING_RESET_GAME, s -> s.replaceAll("%seconds%", gameResetTime + ""));
                     }
                 }
-            }.runTaskLater(Main.getInstance(), 20 * index);
-            index++;
-        }
+            }
+        }.runTaskTimer(Main.getInstance(), 0 ,20);
     }
     private void beforeStart(List<Player> players) {
         beforeStartTimer(players);
     }
     private void beforeStartTimer(List<Player> players) {
-        int index = 0;
-        for (int i = Config.START_COOLTIME; i >= 0; i--) {
-            int finalI = i;
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (!gaming) {
-                        return;
-                    }
-                    if (finalI == 0) {
-                        // 경기 시작
-                        delaying = false;
-                        players.forEach(player -> Lang.send(player, Lang.START_GAME, s -> s));
-                    } else {
-                        for (Player player : players) {
-                            Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", finalI + ""));
-                        }
+        int startCoolTime = Config.START_COOLTIME;
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!gaming) {
+                    return;
+                }
+                if (startCoolTime == 0) {
+                    // 경기 시작
+                    delaying = false;
+                    players.forEach(player -> Lang.send(player, Lang.START_GAME, s -> s));
+                } else {
+                    for (Player player : players) {
+                        Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", startCoolTime + ""));
                     }
                 }
-            }.runTaskLater(Main.getInstance(), 20 * index);
-            index++;
-        }
+            }
+        }.runTaskTimer(Main.getInstance(),0,20);
     }
 
     public void stopBossBarTimer() {

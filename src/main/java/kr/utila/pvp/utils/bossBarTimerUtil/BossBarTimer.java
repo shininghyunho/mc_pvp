@@ -1,4 +1,4 @@
-package kr.utila.pvp.utils;
+package kr.utila.pvp.utils.bossBarTimerUtil;
 
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
