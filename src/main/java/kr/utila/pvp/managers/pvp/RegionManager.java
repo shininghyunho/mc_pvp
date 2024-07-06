@@ -76,6 +76,11 @@ public class RegionManager extends Manager {
 
     public boolean hasAvailableSpace() {
         for (PVPRegion pvpRegion : PVP_REGIONS.values()) {
+            // team region 이 없는 경우 continue
+            if(!pvpRegion.isTeamSet()) {
+                continue;
+            }
+
             if (!pvpRegion.isGaming()) {
                 return true;
             }

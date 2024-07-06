@@ -58,6 +58,10 @@ public class PVPRegion implements Writable {
         this.commands = commands;
     }
 
+    // 레브 블루 팀이 설정되어있는지 확인
+    public boolean isTeamSet() {
+        return regionData.containsKey(TeamType.RED) && regionData.containsKey(TeamType.BLUE);
+    }
     public void setTeamToPlayer(TeamType teamType, Player player) {
         regionPlayer.put(teamType, player.getUniqueId().toString());
     }
