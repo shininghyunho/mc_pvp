@@ -42,7 +42,15 @@ public class PVPCommand {
                                     Lang.send(player, Lang.NON_AVAILABLE_PLACE, s -> s);
                                     return false;
                                 }
+                                if (args.length < 2) {
+                                    player.sendMessage("§c플레이어를 입력하세요.");
+                                    return false;
+                                }
                                 Player target = Bukkit.getPlayer(args[1]);
+                                if(target == null) {
+                                    player.sendMessage("§c플레이어를 찾을 수 없습니다.");
+                                    return false;
+                                }
                                 if (UserManager.getInstance().get(target).getCurrentPVP() != null) {
                                     Lang.send(player, Lang.ALREADY_PVP, s -> s);
                                     return false;
