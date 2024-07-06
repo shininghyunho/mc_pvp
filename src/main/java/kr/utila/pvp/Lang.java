@@ -93,16 +93,16 @@ public class Lang {
             TextComponent component;
             if (message.contains("%accept%")) {
                 component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll("%accept%", "여기")));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/PVP 수락"));
+                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pvp 수락"));
             } else if (message.contains("%refuse_i%")) {
                 component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll("%refuse_i%", "여기")));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/PVP 거절"));
+                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pvp 거절"));
             } else if (message.contains("%regame%")) {
                 component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll("%regame%", "여기")));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/PVP 다시하기"));
+                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pvp 다시하기"));
             } else if (message.contains("%refuse%")) {
                 component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll("%refuse%", "여기")));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/PVP 그만하기"));
+                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pvp 그만하기"));
             } else {
                 component = new TextComponent(TextComponent.fromLegacyText(message));
             }

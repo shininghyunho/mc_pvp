@@ -22,7 +22,7 @@ public class PVPCommand {
 
     public static void register() {
         new SimpleCommandBuilder("pvp")
-                .aliases("피브이피")
+                .aliases("피브이피","PVP")
                 .commandExecutor((sender, command, label, args) -> {
                     if (sender instanceof Player) {
                         Player player = (Player) sender;
