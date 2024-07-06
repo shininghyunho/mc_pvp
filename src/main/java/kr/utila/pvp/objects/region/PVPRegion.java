@@ -38,7 +38,6 @@ public class PVPRegion implements Writable {
     private Map<TeamType, Boolean> acceptingData;
     private int remainSecond;
     private List<String> commands = new ArrayList<>();
-
     public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2) {
         this.name = name;
         this.pos1 = pos1;
@@ -89,50 +88,43 @@ public class PVPRegion implements Writable {
         Player onlinePlayer = Bukkit.getPlayer(UUID.fromString(regionPlayer.get(joining)));
         onlinePlayer.teleport(regionData.get(joining).getStartingLocation().toLocation());
 
-        int index = 0;
-        for (int i = Config.WAITING_PLAYER_SECOND; i >= 0; i--) {
-            int finalI = i;
+        new BukkitRunnable() {
+            int waitingPlayerSecond = Config.WAITING_PLAYER_SECOND;
+            @Override
+            public void run() {
+                waitingPlayerSecond--;
+                if(waitingPlayerSecond<=0) {
+                    if (delaying && !quitPlayer.isOnline()) {
+                        gaming = false;
+                        delaying = false;
 
-            if (finalI == 0) {
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if (delaying && !quitPlayer.isOnline()) {
-                            gaming = false;
-                            delaying = false;
+                        User onlineUser = UserManager.getInstance().get(onlinePlayer);
+                        User offlineUser = UserManager.getInstance().get(quitPlayer);
 
-                            User onlineUser = UserManager.getInstance().get(onlinePlayer);
-                            User offlineUser = UserManager.getInstance().get(quitPlayer);
-
-                            onlineUser.setStraight(onlineUser.getStraight() + 1);
-                            offlineUser.setStraight(0);
-                            Lang.send(onlinePlayer, Lang.FINISH_WINNER, s -> s);
-                            if (!RewardManager.getInstance().get(onlineUser.getStraight()).isEmpty() && !onlineUser.getAcquiredRewards().contains(onlineUser.getStraight())) {
-                                Lang.send(onlinePlayer, Lang.AVAILABLE_TO_GET_REWARD, s -> s);
-                                return;
-                            }
-
-                            onlineUser.quit();
-                            offlineUser.quit();
-
-                            regionPlayer.clear();
+                        onlineUser.setStraight(onlineUser.getStraight() + 1);
+                        offlineUser.setStraight(0);
+                        Lang.send(onlinePlayer, Lang.FINISH_WINNER, s -> s);
+                        if (!RewardManager.getInstance().get(onlineUser.getStraight()).isEmpty() && !onlineUser.getAcquiredRewards().contains(onlineUser.getStraight())) {
+                            Lang.send(onlinePlayer, Lang.AVAILABLE_TO_GET_REWARD, s -> s);
+                            return;
                         }
+
+                        onlineUser.quit();
+                        offlineUser.quit();
+
+                        regionPlayer.clear();
                     }
-                }.runTaskLater(Main.getInstance(), 20 * index);
-            } else {
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        Lang.send(onlinePlayer, Lang.WAITING_PLAYER, s -> {
-                            return s.replaceAll("%player%", quitPlayer.getName())
-                                    .replaceAll("%second%", finalI + "");
-                        });
-                    }
-                }.runTaskLater(Main.getInstance(), 20 * index);
-                index++;
+                    cancel();
+                }
+                else {
+                    Lang.send(onlinePlayer, Lang.WAITING_PLAYER, s -> s.replaceAll("%player%", quitPlayer.getName())
+                            .replaceAll("%second%", waitingPlayerSecond + ""));
+                }
             }
-        }
+        }.runTaskTimer(Main.getInstance(), 0,20);
     }
+
+
 
     public void askRestart(Player winner, Player loser) {
         delaying = true;
@@ -383,19 +375,21 @@ public class PVPRegion implements Writable {
         resetGameTimer(players);
     }
     private void resetGameTimer(List<Player> players) {
-        int gameResetTime = Config.GAME_RESET_TIME;
         new BukkitRunnable() {
+            int gameResetTime = Config.GAME_RESET_TIME;
             @Override
             public void run() {
                 if (!gaming) {
                     return;
                 }
-                if (gameResetTime == 0) {
+                gameResetTime--;
+                if (gameResetTime <= 0) {
                     for (Player player : players) {
                         Lang.send(player, Lang.RESET_GAME, s -> s);
                     }
                     // 게임 시작전
                     beforeStart(players);
+                    cancel();
                 } else {
                     for (Player player : players) {
                         Lang.send(player, Lang.WAITING_RESET_GAME, s -> s.replaceAll("%seconds%", gameResetTime + ""));
@@ -408,17 +402,20 @@ public class PVPRegion implements Writable {
         beforeStartTimer(players);
     }
     private void beforeStartTimer(List<Player> players) {
-        int startCoolTime = Config.START_COOLTIME;
         new BukkitRunnable() {
+            int startCoolTime = Config.START_COOLTIME;
+
             @Override
             public void run() {
                 if (!gaming) {
                     return;
                 }
-                if (startCoolTime == 0) {
+                startCoolTime--;
+                if (startCoolTime <= 0) {
                     // 경기 시작
                     delaying = false;
                     players.forEach(player -> Lang.send(player, Lang.START_GAME, s -> s));
+                    cancel();
                 } else {
                     for (Player player : players) {
                         Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", startCoolTime + ""));
