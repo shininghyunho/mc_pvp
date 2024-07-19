@@ -8,7 +8,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 public class Lang {
@@ -41,6 +43,14 @@ public class Lang {
     public static LangFormat ALREADY_PVP;
     public static LangFormat ALREADY_INVITING;
     public static LangFormat ALREADY_PVP_SELF;
+
+    private static final Map<String,String> commandMap = new HashMap<>();
+    // 커맨드 메시지
+    private static final Map<String,String> commandButton = new HashMap<>();
+
+    public Lang() {
+        initCommand();
+    }
 
     public static void load() {
         Main.getInstance().saveResource("lang.yml", false);
@@ -90,23 +100,16 @@ public class Lang {
 
     public static void sendClickableCommand(Player player, LangFormat langFormat) {
         for (String message : langFormat.text) {
-            TextComponent component;
-            if (message.contains("%accept%")) {
-                component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll("%accept%", "여기")));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pvp 수락"));
-            } else if (message.contains("%refuse_i%")) {
-                component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll("%refuse_i%", "여기")));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pvp 거절"));
-            } else if (message.contains("%regame%")) {
-                component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll("%regame%", "여기")));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pvp 다시하기"));
-            } else if (message.contains("%refuse%")) {
-                component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll("%refuse%", "여기")));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pvp 그만하기"));
-            } else {
-                component = new TextComponent(TextComponent.fromLegacyText(message));
+            TextComponent component = null;
+            for(String key:commandMap.keySet()) {
+                if(!message.contains(key)) continue;
+                component = new TextComponent(message.replace(key, commandButton.get(key)));
+                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, commandMap.get(key)));
+                break;
             }
-            player.spigot().sendMessage(component);
+            player.spigot().sendMessage(component != null
+                    ? component
+                    : new TextComponent(message));
         }
     }
 
@@ -127,6 +130,18 @@ public class Lang {
             String subtitle = section.getString("subtitle");
             return new LangFormat(text, title, subtitle);
         }
+    }
 
+    // init command
+    private static void initCommand() {
+        initCommandParam("%accept_yes%", "수락");
+        initCommandParam("%accept_no%", "거절");
+        // retry yes
+        initCommandParam("%retry_yes%", "다시하기");
+        initCommandParam("%retry_no%", "그만하기");
+    }
+    private static void initCommandParam(String param, String message) {
+        commandMap.put(param,"/pvp "+message);
+        commandButton.put(param, message+"버튼");
     }
 }
