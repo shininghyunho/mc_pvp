@@ -1,6 +1,6 @@
 package kr.utila.pvp.managers;
 
-import kr.utila.pvp.Lang;
+import kr.utila.pvp.config.Lang;
 import kr.utila.pvp.Main;
 import kr.utila.pvp.objects.LocationDTO;
 import kr.utila.pvp.objects.User;

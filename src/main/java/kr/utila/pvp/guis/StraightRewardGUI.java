@@ -1,6 +1,6 @@
 package kr.utila.pvp.guis;
 
-import kr.utila.pvp.Lang;
+import kr.utila.pvp.config.Lang;
 import kr.utila.pvp.Main;
 import kr.utila.pvp.libraries.SimpleInventoryHolder;
 import kr.utila.pvp.managers.UserManager;

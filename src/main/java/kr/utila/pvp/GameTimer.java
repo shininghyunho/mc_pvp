@@ -1,5 +1,6 @@
 package kr.utila.pvp;
 
+import kr.utila.pvp.config.Lang;
 import kr.utila.pvp.managers.pvp.RegionManager;
 import kr.utila.pvp.objects.region.PVPRegion;
 import kr.utila.pvp.objects.region.TeamType;

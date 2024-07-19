@@ -1,4 +1,6 @@
-package kr.utila.pvp;
+package kr.utila.pvp.config;
+
+import kr.utila.pvp.Main;
 
 public class Config {
 

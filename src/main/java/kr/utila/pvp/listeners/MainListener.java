@@ -1,6 +1,6 @@
 package kr.utila.pvp.listeners;
 
-import kr.utila.pvp.Lang;
+import kr.utila.pvp.config.Lang;
 import kr.utila.pvp.Main;
 import kr.utila.pvp.commands.PVPAdminCommand;
 import kr.utila.pvp.managers.UserManager;

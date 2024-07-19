@@ -1,6 +1,6 @@
 package kr.utila.pvp.commands;
 
-import kr.utila.pvp.Lang;
+import kr.utila.pvp.config.Lang;
 import kr.utila.pvp.Main;
 import kr.utila.pvp.guis.StraightRewardGUI;
 import kr.utila.pvp.libraries.SimpleCommandBuilder;

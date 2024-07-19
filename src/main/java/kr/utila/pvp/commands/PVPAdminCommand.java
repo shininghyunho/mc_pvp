@@ -1,7 +1,7 @@
 package kr.utila.pvp.commands;
 
-import kr.utila.pvp.Config;
-import kr.utila.pvp.Lang;
+import kr.utila.pvp.config.Config;
+import kr.utila.pvp.config.Lang;
 import kr.utila.pvp.Main;
 import kr.utila.pvp.guis.ItemSettingGUI;
 import kr.utila.pvp.guis.StraightRewardSettingGUI;

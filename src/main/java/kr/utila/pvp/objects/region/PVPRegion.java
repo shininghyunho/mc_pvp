@@ -1,7 +1,7 @@
 package kr.utila.pvp.objects.region;
 
-import kr.utila.pvp.Config;
-import kr.utila.pvp.Lang;
+import kr.utila.pvp.config.Config;
+import kr.utila.pvp.config.Lang;
 import kr.utila.pvp.Main;
 import kr.utila.pvp.managers.UserManager;
 import kr.utila.pvp.managers.pvp.RewardManager;
