@@ -134,7 +134,7 @@ public class Lang {
     }
 
     public static class ClickMessage {
-        private static final String fileName = "ClickMessage.yml";
+        private static final String fileName = "clickMessage.yml";
         // variable map
         public static final Map<String, String> clickMessageMap = new HashMap<>();
         // click command map
