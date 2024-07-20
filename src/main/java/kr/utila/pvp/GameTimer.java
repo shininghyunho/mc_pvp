@@ -38,12 +38,6 @@ public class GameTimer {
                         }
                         int remainSecond = pvpRegion.getRemainSecond() - 1;
                         pvpRegion.setRemainSecond(remainSecond);
-                        if (remainSecond % 10 == 0 || (remainSecond <= 10 && remainSecond > 0)) {
-                            for (String uuid : pvpRegion.getRegionPlayer().values()) {
-                                Player player = Bukkit.getPlayer(UUID.fromString(uuid));
-                                Lang.send(player, Lang.BROADCAST_REMAIN_COUNT, s -> s.replaceAll("%second%", remainSecond + ""));
-                            }
-                        }
                         if (remainSecond <= 0) {
                             // stop boss bar timer
                             isGaming = false;
@@ -58,6 +52,12 @@ public class GameTimer {
                                 pvpRegion.askRestart(player1, player2);
                             } else {
                                 pvpRegion.askRestart(player2, player1);
+                            }
+                        }
+                        else if (remainSecond % 10 == 0) {
+                            for (String uuid : pvpRegion.getRegionPlayer().values()) {
+                                Player player = Bukkit.getPlayer(UUID.fromString(uuid));
+                                Lang.send(player, Lang.BROADCAST_REMAIN_COUNT, s -> s.replaceAll("%second%", remainSecond + ""));
                             }
                         }
                     }
