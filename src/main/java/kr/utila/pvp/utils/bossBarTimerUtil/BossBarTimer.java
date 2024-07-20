@@ -23,7 +23,7 @@ public class BossBarTimer {
         this.plugin = plugin;
         this.totalTime = totalTime;
         this.timeLeft = totalTime;
-        this.bossBar = Bukkit.createBossBar("Time Left: " + timeLeft, BarColor.GREEN, BarStyle.SOLID);
+        this.bossBar = Bukkit.createBossBar(getUpdatedBossBarTitle(), BarColor.GREEN, BarStyle.SOLID);
         this.players = new HashSet<>();
     }
 
@@ -69,6 +69,10 @@ public class BossBarTimer {
     private void updateBossBar() {
         timeLeft--;
         bossBar.setProgress((double) timeLeft / totalTime);
-        bossBar.setTitle("Time Left: " + timeLeft);
+        bossBar.setTitle(getUpdatedBossBarTitle());
+    }
+
+    private String getUpdatedBossBarTitle() {
+        return kr.utila.pvp.config.Config.BOSS_BAR_TIMER_TITLE.replace("%second%", String.valueOf(timeLeft));
     }
 }
