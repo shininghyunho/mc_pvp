@@ -14,6 +14,7 @@ public class Config {
     public static int WAITING_PLAYER_SECOND;
     public static int GAME_TIME;
     public static int GAME_RESET_TIME;
+    public static int GAME_RESTART_TIME;
     public static String BOSS_BAR_TIMER_TITLE;
 
     public static void load() {
@@ -25,6 +26,7 @@ public class Config {
         WAITING_PLAYER_SECOND = config.getInt("WAITING_PLAYER_SECOND");
         GAME_TIME = config.getInt("GAME_TIME");
         GAME_RESET_TIME = config.getInt("GAME_RESET_TIME");
+        GAME_RESTART_TIME = config.getInt("GAME_RESTART_TIME");
         BOSS_BAR_TIMER_TITLE = config.getString("BOSS_BAR_TIMER_TITLE");
         ClickMessage.load(config);
     }
