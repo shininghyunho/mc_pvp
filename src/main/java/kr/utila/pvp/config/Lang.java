@@ -42,8 +42,6 @@ public class Lang {
     public static LangFormat ALREADY_PVP_SELF;
 
     public static void load() {
-        // 클릭 메시지 로딩
-        ClickMessage.load();
         // Lang 로딩
         String fileName = "lang.yml";
         Main.getInstance().saveResource(fileName, false);
@@ -70,16 +68,17 @@ public class Lang {
     public static void sendClickableCommand(Player player, LangFormat langFormat) {
         for (String message : langFormat.text) {
             TextComponent component = null;
-            for(String key: ClickMessage.clickCommandMap.keySet()) {
+            for(String key: Config.ClickMessage.clickCommandMap.keySet()) {
                 if(!message.contains(key)) continue;
-                String clickMessage = ClickMessage.clickMessageMap.get(key);
-                component = new TextComponent(message.replace(key, clickMessage == null ? "" : clickMessage));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, ClickMessage.clickCommandMap.get(key)));
+                String clickMessage = Config.ClickMessage.clickMessageMap.get(key);
+                var key_par= "%" + key + "%";
+                component = new TextComponent(TextComponent.fromLegacyText(message.replace(key_par, clickMessage == null ? "" : clickMessage)));
+                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, Config.ClickMessage.clickCommandMap.get(key)));
                 break;
             }
             player.spigot().sendMessage(component != null
                     ? component
-                    : new TextComponent(message));
+                    : new TextComponent(TextComponent.fromLegacyText(message)));
         }
     }
 
@@ -130,30 +129,6 @@ public class Lang {
             String title = section.getString("title");
             String subtitle = section.getString("subtitle");
             return new LangFormat(text, title, subtitle);
-        }
-    }
-
-    public static class ClickMessage {
-        private static final String fileName = "clickMessage.yml";
-        // variable map
-        public static final Map<String, String> clickMessageMap = new HashMap<>();
-        // click command map
-        public static final Map<String, String> clickCommandMap = new HashMap<>() {{
-            put("%accept_yes%", "/pvp 수락");
-            put("%accept_no%", "/pvp 거절");
-            put("%retry_yes%", "/pvp 다시하기");
-            put("%retry_no%", "/pvp 그만하기");
-        }};
-
-        /**
-         * load 를 호출하면 ClickMessage.yml 에서 변수를 읽어옴
-         */
-        public static void load() {
-            Main.getInstance().saveResource(fileName, false);
-            YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(new File(Main.getInstance().getDataFolder(), fileName));
-
-            clickMessageMap.clear();
-            yamlConfiguration.getKeys(false).forEach(key -> clickMessageMap.put(key, yamlConfiguration.getString(key)));
         }
     }
 }

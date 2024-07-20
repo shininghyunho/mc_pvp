@@ -150,8 +150,8 @@ public class PVPRegion implements Writable {
             Lang.send(winner, Lang.AVAILABLE_TO_GET_REWARD, s -> s);
             return;
         }
-        Lang.send(winner, Lang.ASK_RETRY, s -> s);
-        Lang.send(loser, Lang.ASK_RETRY, s -> s);
+        Lang.sendClickableCommand(winner, Lang.ASK_RETRY);
+        Lang.sendClickableCommand(loser, Lang.ASK_RETRY);
         retry = true;
         acceptingData = new HashMap<>();
         acceptingData.put(TeamType.RED, false);
@@ -169,7 +169,7 @@ public class PVPRegion implements Writable {
                 player.teleport(regionData.get(TeamType.RED).getStartingLocation().toLocation());
             }
             Lang.send(player, Lang.DRAW, s -> s);
-            Lang.send(player, Lang.ASK_RETRY, s -> s);
+            Lang.sendClickableCommand(player, Lang.ASK_RETRY);
         }
         retry = true;
         acceptingData = new HashMap<>();

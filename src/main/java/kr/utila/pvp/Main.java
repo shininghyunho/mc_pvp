@@ -55,8 +55,8 @@ public final class Main extends JavaPlugin {
     }
 
     private void load() {
-        Lang.load();
         Config.load();
+        Lang.load();
         try {
             RewardManager.getInstance().load();
             RegionManager.getInstance().load();

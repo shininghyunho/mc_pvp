@@ -1,6 +1,10 @@
 package kr.utila.pvp.config;
 
 import kr.utila.pvp.Main;
+import org.bukkit.configuration.file.FileConfiguration;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Config {
 
@@ -14,9 +18,33 @@ public class Config {
     public static void load() {
         PLUGIN.saveDefaultConfig();
         PLUGIN.reloadConfig();
-        START_COOLTIME = PLUGIN.getConfig().getInt("START_COOLTIME");
-        WAITING_PLAYER_SECOND = PLUGIN.getConfig().getInt("WAITING_PLAYER_SECOND");
-        GAME_TIME = PLUGIN.getConfig().getInt("GAME_TIME");
-        GAME_RESET_TIME = PLUGIN.getConfig().getInt("GAME_RESET_TIME");
+        var config = PLUGIN.getConfig();
+        START_COOLTIME = config.getInt("START_COOLTIME");
+        WAITING_PLAYER_SECOND = config.getInt("WAITING_PLAYER_SECOND");
+        GAME_TIME = config.getInt("GAME_TIME");
+        GAME_RESET_TIME = config.getInt("GAME_RESET_TIME");
+        ClickMessage.load(config);
+    }
+
+    public static class ClickMessage {
+        // variable map
+        public static final Map<String, String> clickMessageMap = new HashMap<>();
+        // click command map
+        public static final Map<String, String> clickCommandMap = new HashMap<>() {{
+            put("accept_yes", "/pvp 수락");
+            put("accept_no", "/pvp 거절");
+            put("retry_yes", "/pvp 다시하기");
+            put("retry_no", "/pvp 그만하기");
+        }};
+
+        private static void load(FileConfiguration config) {
+            var clickMessage = config.getConfigurationSection("CLICK_MESSAGE");
+            if (clickMessage == null) {
+                return;
+            }
+            for (String key : clickMessage.getKeys(false)) {
+                clickMessageMap.put(key, clickMessage.getString(key));
+            }
+        }
     }
 }
