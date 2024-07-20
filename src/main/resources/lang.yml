@@ -121,3 +121,8 @@ ALREADY_PVP_SELF:
     - "당신은 이미 PVP중입니다"
   title: ""
   subtitle: ""
+GAME_RESTART_TIMER_TITLE:
+  text:
+    - "%second%초 후에 게임이 재시작됩니다"
+  title: ""
+  subtitle: ""
