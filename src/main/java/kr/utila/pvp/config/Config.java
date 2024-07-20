@@ -14,15 +14,18 @@ public class Config {
     public static int WAITING_PLAYER_SECOND;
     public static int GAME_TIME;
     public static int GAME_RESET_TIME;
+    public static String BOSS_BAR_TIMER_TITLE;
 
     public static void load() {
         PLUGIN.saveDefaultConfig();
         PLUGIN.reloadConfig();
+
         var config = PLUGIN.getConfig();
         START_COOLTIME = config.getInt("START_COOLTIME");
         WAITING_PLAYER_SECOND = config.getInt("WAITING_PLAYER_SECOND");
         GAME_TIME = config.getInt("GAME_TIME");
         GAME_RESET_TIME = config.getInt("GAME_RESET_TIME");
+        BOSS_BAR_TIMER_TITLE = config.getString("BOSS_BAR_TIMER_TITLE");
         ClickMessage.load(config);
     }
 
