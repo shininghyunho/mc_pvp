@@ -20,6 +20,7 @@ public class Lang {
     public static LangFormat FINISH_WINNER;
     public static LangFormat FINISH_LOSER;
     public static LangFormat ACCEPT_INVITATION;
+    public static LangFormat ASK_RETRY_INFO;
     public static LangFormat ASK_RETRY;
     public static LangFormat REJECT_RETRY;
     public static LangFormat ACCEPT_RETRY;
@@ -91,6 +92,7 @@ public class Lang {
         FINISH_WINNER = LangFormat.get(yamlConfiguration.getConfigurationSection("FINISH_WINNER"));
         FINISH_LOSER = LangFormat.get(yamlConfiguration.getConfigurationSection("FINISH_LOSER"));
         ACCEPT_INVITATION = LangFormat.get(yamlConfiguration.getConfigurationSection("ACCEPT_INVITATION"));
+        ASK_RETRY_INFO = LangFormat.get(yamlConfiguration.getConfigurationSection("ASK_RETRY_INFO"));
         ASK_RETRY = LangFormat.get(yamlConfiguration.getConfigurationSection("ASK_RETRY"));
         REJECT_RETRY = LangFormat.get(yamlConfiguration.getConfigurationSection("REJECT_RETRY"));
         ACCEPT_RETRY = LangFormat.get(yamlConfiguration.getConfigurationSection("ACCEPT_RETRY"));

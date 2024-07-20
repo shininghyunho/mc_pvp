@@ -29,9 +29,13 @@ ACCEPT_INVITATION:
     - "§l%accept_no% §r를 클릭하여 PVP 신청을 거절 하세요"
   title: ""
   subtitle: ""
+ASK_RETRY_INFO :
+    text:
+        - "다시 하시겠습니까? (선택하지 않으면 %GAME_RESTART_TIME%초 후에 자동으로 거절됩니다)"
+    title: ""
+    subtitle: ""
 ASK_RETRY:
   text:
-    - "다시 하시겠습니까?"
     - "§l%retry_yes% §r를 클릭하여 다시하기를 수락하세요"
     - "§l%retry_no% §r를 클릭하여 다시하기를 거절하세요"
   title: ""

@@ -128,8 +128,7 @@ public class PVPRegion implements Writable {
         }.runTaskTimer(Main.getInstance(), 0,20);
     }
 
-
-
+    // 재시작 요청 (승자,패자가 존재할때)
     public void askRestart(Player winner, Player loser) {
         delaying = true;
         if (regionPlayer.get(TeamType.BLUE).equals(winner.getUniqueId().toString())) {
@@ -150,14 +149,14 @@ public class PVPRegion implements Writable {
             Lang.send(winner, Lang.AVAILABLE_TO_GET_REWARD, s -> s);
             return;
         }
+        Lang.send(winner, Lang.ASK_RETRY_INFO, s -> s.replaceAll("%GAME_RESTART_TIME%", String.valueOf(Config.GAME_RESTART_TIME)));
+        Lang.send(loser, Lang.ASK_RETRY_INFO, s -> s.replaceAll("%GAME_RESTART_TIME%", String.valueOf(Config.GAME_RESTART_TIME)));
         Lang.sendClickableCommand(winner, Lang.ASK_RETRY);
         Lang.sendClickableCommand(loser, Lang.ASK_RETRY);
-        retry = true;
-        acceptingData = new HashMap<>();
-        acceptingData.put(TeamType.RED, false);
-        acceptingData.put(TeamType.BLUE, false);
+        initializeRestart();
     }
 
+    // 재시작 요청 (무승부)
     public void askRestart() {
         delaying = true;
         for (String uuid : regionPlayer.values()) {
@@ -169,19 +168,47 @@ public class PVPRegion implements Writable {
                 player.teleport(regionData.get(TeamType.RED).getStartingLocation().toLocation());
             }
             Lang.send(player, Lang.DRAW, s -> s);
+            Lang.send(player, Lang.ASK_RETRY_INFO, s -> s.replaceAll("%GAME_RESTART_TIME%", String.valueOf(Config.GAME_RESTART_TIME)));
             Lang.sendClickableCommand(player, Lang.ASK_RETRY);
         }
+        initializeRestart();
+    }
+
+    private void initializeRestart() {
         retry = true;
         acceptingData = new HashMap<>();
         acceptingData.put(TeamType.RED, false);
         acceptingData.put(TeamType.BLUE, false);
+
+        // 임의의 플레이어
+        Player player = Bukkit.getPlayer(UUID.fromString(regionPlayer.get(TeamType.RED)));
+        // 재시작 요청 타이머 (GAME_RESTART_TIME 초 후에 게임 종료)
+        new BukkitRunnable() {
+            int gameRestartTime = Config.GAME_RESTART_TIME;
+            @Override
+            public void run() {
+                if (!retry) {
+                    cancel();
+                    return;
+                }
+
+                gameRestartTime--;
+                if (gameRestartTime <= 0) {
+                    // 게임 종료
+                    PVPRegion.this.cancel(player);
+                    cancel();
+                }
+            }
+        }.runTaskTimer(Main.getInstance(), 0, 20);
     }
+
 
     public void cancel(OfflinePlayer quitPlayer) {
         // 게임 중단
         stopBossBarTimer();
         gaming = false;
         delaying = false;
+        retry = false;
         Player onlinePlayer;
         OfflinePlayer offlinePlayer = quitPlayer;
         if (regionPlayer.get(TeamType.RED).equals(quitPlayer.getUniqueId().toString())) {
@@ -200,6 +227,7 @@ public class PVPRegion implements Writable {
         stopBossBarTimer();
         gaming = false;
         delaying = false;
+        retry = false;
         for (String uuid : regionPlayer.values()) {
             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
             if (offlinePlayer.isOnline()) {
@@ -342,6 +370,7 @@ public class PVPRegion implements Writable {
 
         delaying = true;
         gaming = true;
+        retry = false;
         remainSecond = Config.GAME_TIME;
 
         // 게임 초기화
