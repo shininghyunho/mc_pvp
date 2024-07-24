@@ -1,4 +1,4 @@
-package kr.utila.pvp.utils;
+package kr.utila.pvp.utils.bossBarTimer;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
