@@ -3,6 +3,7 @@ package kr.utila.pvp.managers.pvp;
 import kr.utila.pvp.Main;
 import kr.utila.pvp.managers.Manager;
 import kr.utila.pvp.objects.LocationDTO;
+import kr.utila.pvp.objects.region.GameStatus;
 import kr.utila.pvp.objects.region.PVPRegion;
 import kr.utila.pvp.objects.region.TeamType;
 import org.bukkit.configuration.ConfigurationSection;
@@ -121,7 +122,9 @@ public class RegionManager extends Manager {
                     ? yamlConfiguration.getStringList("commands")
                     : new ArrayList<>(List.of("명령어1","명령어2"));
 
-            LocationDTO pos1 = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("pos1"));
+            LocationDTO pos1 = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("    private boolean gaming;\n" +
+                    "    private boolean delaying;\n" +
+                    "    private boolean retry;"));
             LocationDTO pos2 = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("pos2"));
             Map<TeamType, PVPRegion.TeamRegion> regionData = new HashMap<>();
             if (yamlConfiguration.contains("regionData")) {
@@ -142,11 +145,12 @@ public class RegionManager extends Manager {
                     regionData.put(teamType, new PVPRegion.TeamRegion(teamType, startingLocation, itemPackage));
                 }
             }
+            // load game status
+            GameStatus gameStatus = GameStatus.valueOf(yamlConfiguration.getString("gameStatus"));
+
             Map<TeamType, String> regionPlayer = new HashMap<>();
             int remainSecond = 0;
-            boolean gaming = false;
             if (yamlConfiguration.contains("regionPlayer")) {
-                gaming = true;
                 ConfigurationSection gamingSection = yamlConfiguration.getConfigurationSection("regionPlayer");
                 for (String team : gamingSection.getKeys(false)) {
                     regionPlayer.put(TeamType.valueOf(team), gamingSection.getString(team));
@@ -154,7 +158,7 @@ public class RegionManager extends Manager {
                 remainSecond = yamlConfiguration.getInt("remainSecond");
             }
             // PVP_REGIONS 에 추가
-            PVP_REGIONS.put(name, new PVPRegion(name, pos1, pos2, regionData, regionPlayer, gaming, remainSecond, commands));
+            PVP_REGIONS.put(name, new PVPRegion(name, pos1, pos2, regionData, regionPlayer, gameStatus, remainSecond, commands));
         }
     }
 }

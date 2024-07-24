@@ -25,6 +25,8 @@ import java.util.logging.Logger;
 public class PVPRegion implements Writable {
     Logger logger = Logger.getLogger("PVPRegion");
     private static final String COMMANDS="commands";
+    private static final String GAME_STATUS = "gameStatus";
+    private static final String DEFAULT_GAME_STATUS = "게임_안함";
 
     private static final File DIRECTORY = new File(Main.getInstance().getDataFolder(), "pvp_regions");
 
@@ -33,6 +35,7 @@ public class PVPRegion implements Writable {
     private final LocationDTO pos2;
     private final Map<TeamType, TeamRegion> regionData;
     private final Map<TeamType, String> regionPlayer;
+    private GameStatus gameStatus;
     private boolean gaming;
     private boolean delaying;
     private boolean retry;
@@ -41,21 +44,16 @@ public class PVPRegion implements Writable {
     private List<String> commands;
 
     public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2) {
-        this.name = name;
-        this.pos1 = pos1;
-        this.pos2 = pos2;
-        this.regionData = new HashMap<>();
-        this.regionPlayer = new HashMap<>();
+        this(name, pos1, pos2, new HashMap<>(), new HashMap<>(), GameStatus.GAME_NOT_STARTED, 0, new ArrayList<>());
     }
 
-    public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2, Map<TeamType, TeamRegion> regionData, Map<TeamType, String> regionPlayer, boolean gaming, int remainSecond
-    ,List<String> commands) {
+    public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2, Map<TeamType, TeamRegion> regionData, Map<TeamType, String> regionPlayer, GameStatus gameStatus, int remainSecond,List<String> commands) {
         this.name = name;
         this.pos1 = pos1;
         this.pos2 = pos2;
         this.regionData = regionData;
         this.regionPlayer = regionPlayer;
-        this.gaming = gaming;
+        this.gameStatus = gameStatus;
         this.remainSecond = remainSecond;
         this.commands = commands;
     }
@@ -252,6 +250,9 @@ public class PVPRegion implements Writable {
         if(!yamlConfiguration.contains(COMMANDS)) {
             // List<String> 섹션을 만들고 예제도 같이 넣어준다.
             yamlConfiguration.set(COMMANDS, new ArrayList<>(List.of("명령어1","명령어2")));
+        }
+        if(!yamlConfiguration.contains(GAME_STATUS)) {
+            yamlConfiguration.set(GAME_STATUS, DEFAULT_GAME_STATUS);
         }
         try {
             yamlConfiguration.save(PATH);
