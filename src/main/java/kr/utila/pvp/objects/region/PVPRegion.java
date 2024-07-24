@@ -44,7 +44,7 @@ public class PVPRegion implements Writable {
     private List<String> commands;
 
     public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2) {
-        this(name, pos1, pos2, new HashMap<>(), new HashMap<>(), GameStatus.GAME_NOT_STARTED, 0, new ArrayList<>());
+        this(name, pos1, pos2, new HashMap<>(), new HashMap<>(), GameStatus.NOT_STARTED, 0, new ArrayList<>());
     }
 
     public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2, Map<TeamType, TeamRegion> regionData, Map<TeamType, String> regionPlayer, GameStatus gameStatus, int remainSecond,List<String> commands) {
