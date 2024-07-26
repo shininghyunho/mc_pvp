@@ -77,12 +77,13 @@ public class PVPRegion implements Writable {
         prepareMatch(true);
     }
     public void waitPlayer(Player quitPlayer) {
+        GameStatus priorGameStatus = gameStatus;
         gameStatus = GameStatus.PAUSED;
         // 상대 플레이어를 스타팅 지역으로 이동
         Player opponent = getOpponent(quitPlayer);
         teleportToStartingLocation(opponent);
         // 나간 플레이어가 다시 접속할 때까지 대기
-        waitPlayerTimer(opponent, quitPlayer);
+        waitPlayerTimer(opponent, quitPlayer, priorGameStatus);
     }
     public void askRestartWhenNotDraw(Player winner, Player loser) {
         prepareMatchReplayRequest();
@@ -187,10 +188,6 @@ public class PVPRegion implements Writable {
 
     // TODO : remove deprecated methods
     @Deprecated
-    public boolean isRetry() {
-        return retry;
-    }
-    @Deprecated
     public boolean isGaming() {
         return gaming;
     }
@@ -276,7 +273,7 @@ public class PVPRegion implements Writable {
      * 나간 플레이어가 다시 접속하면 gameStatus 를 MATCH_IN_PROGRESS 로 변경 후 경기 재개 <br><br>
      * 대기시간이 초과하면 gameStatus 를 NOT_STARTED 로 변경 후 종료
      */
-    private void waitPlayerTimer(Player waitPlayer, Player quitPlayer) {
+    private void waitPlayerTimer(Player waitPlayer, Player quitPlayer,GameStatus priorGameStatus) {
         // 나간 플레이어가 다시 접속할 때까지 대기
         second = Config.WAITING_PLAYER_SECOND;
         new BukkitRunnable() {
@@ -285,8 +282,7 @@ public class PVPRegion implements Writable {
                 // 나갔던 유저가 다시 접속하면 종료
                 if (quitPlayer.isOnline()) {
                     // 게임 재개
-                    gameStatus = GameStatus.MATCH_IN_PROGRESS;
-                    resumeMatch();
+                    resumeMatch(priorGameStatus);
                     cancel();
                 }
                 // 대기해도 안들어오면 경기 종료
@@ -336,7 +332,7 @@ public class PVPRegion implements Writable {
      * 상대방 플레이어를 반환
      * @param player 플레이어
      */
-    private Player getOpponent(@NotNull Player player) {
+    public Player getOpponent(@NotNull Player player) {
         String opponentUUID = getTeam(player) == TeamType.RED
                 ? regionPlayerUniqueIdMap.get(TeamType.BLUE)
                 : regionPlayerUniqueIdMap.get(TeamType.RED);
@@ -392,7 +388,7 @@ public class PVPRegion implements Writable {
         gameStatus = GameStatus.MATCH_IN_PROGRESS;
         startBossBarTimer();
     }
-    private void resumeMatch() {
-        // TODO : 보스바 타이머 수정
+    private void resumeMatch(GameStatus priorGameStatus) {
+        gameStatus = priorGameStatus;
     }
 }

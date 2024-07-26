@@ -55,14 +55,15 @@ public class MainListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         User user = UserManager.getInstance().get(player);
-        if (user.getCurrentPVP() != null) {
-            PVPRegion pvpRegion = RegionManager.getInstance().get(user.getCurrentPVP());
-            if (pvpRegion.getGameStatus().equals(GameStatus.PAUSED)) {
-                pvpRegion.cancelByReject(player);
-            } else {
-                pvpRegion.waitPlayer(player);
-            }
-        }
+        if(user.getCurrentPVP() == null) return;
+
+        PVPRegion pvpRegion = RegionManager.getInstance().get(user.getCurrentPVP());
+        if(pvpRegion == null) return;
+
+        // 이미 일시정지 이면 취소
+        if(pvpRegion.getGameStatus().equals(GameStatus.PAUSED)) pvpRegion.cancelByReject(player);
+        else pvpRegion.waitPlayer(player);
+
     }
 
     @EventHandler
