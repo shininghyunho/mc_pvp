@@ -43,30 +43,30 @@ public class RegionManager extends Manager {
 
     public void setTeamLocation(String name, TeamType team, LocationDTO startingLocation) {
         PVPRegion pvpRegion = PVP_REGIONS.get(name);
-        if (!pvpRegion.getRegionData().containsKey(team)) {
-            pvpRegion.getRegionData().put(team, new PVPRegion.TeamRegion(team, startingLocation, null));
+        if (!pvpRegion.teamRegionMap.containsKey(team)) {
+            pvpRegion.teamRegionMap.put(team, new PVPRegion.TeamRegion(startingLocation, null));
             return;
         }
-        pvpRegion.getRegionData().get(team).setStartingLocation(startingLocation);
+        pvpRegion.teamRegionMap.get(team).startingLocation = startingLocation;
         pvpRegion.write();
     }
 
     public void setTeamStartItem(String name, TeamType team, List<ItemStack> itemStacks) {
         PVPRegion pvpRegion = PVP_REGIONS.get(name);
-        if (!pvpRegion.getRegionData().containsKey(team)) {
-            pvpRegion.getRegionData().put(team, new PVPRegion.TeamRegion(team, null, itemStacks));
+        if (!pvpRegion.teamRegionMap.containsKey(team)) {
+            pvpRegion.teamRegionMap.put(team, new PVPRegion.TeamRegion(null, itemStacks));
             return;
         }
-        pvpRegion.getRegionData().get(team).setItemPackage(itemStacks);
+        pvpRegion.teamRegionMap.get(team).itemPackage = itemStacks;
         pvpRegion.write();
     }
 
     public List<ItemStack> getTeamStartItem(String name, TeamType team) {
         PVPRegion pvpRegion = PVP_REGIONS.get(name);
-        if (!pvpRegion.getRegionData().containsKey(team)) {
+        if (!pvpRegion.teamRegionMap.containsKey(team)) {
             return new ArrayList<>();
         }
-        return pvpRegion.getRegionData().get(team).getItemPackage();
+        return pvpRegion.teamRegionMap.get(team).itemPackage;
     }
 
     public void delete(String name) {
@@ -142,7 +142,7 @@ public class RegionManager extends Manager {
                             itemPackage.add(teamRegionSection.getItemStack(team + ".items." + key));
                         }
                     }
-                    regionData.put(teamType, new PVPRegion.TeamRegion(teamType, startingLocation, itemPackage));
+                    regionData.put(teamType, new PVPRegion.TeamRegion(startingLocation, itemPackage));
                 }
             }
             // load game status

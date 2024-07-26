@@ -19,7 +19,6 @@ public class BossBarTimerManager {
     }
 
     public static void removeTimer(String name) {
-        timers.remove(name)
-                .stop();
+        if(timers.containsKey(name)) timers.remove(name).stop();
     }
 }

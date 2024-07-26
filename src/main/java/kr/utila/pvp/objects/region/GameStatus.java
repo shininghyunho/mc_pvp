@@ -25,7 +25,7 @@ public enum GameStatus {
     }
 
     // is in game
-    public boolean isInGame() {
-        return this == MATCH_INITIALIZED || this == MATCH_WAITING || this == MATCH_IN_PROGRESS || this == MATCH_REPLAY_REQUESTED || this == PAUSED;
+    public static boolean isInGame(GameStatus gameStatus) {
+        return gameStatus != NOT_STARTED && gameStatus != REQUESTED;
     }
 }

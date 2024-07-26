@@ -17,6 +17,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.*;
@@ -33,421 +34,358 @@ public class PVPRegion implements Writable {
     private final String name;
     private final LocationDTO pos1;
     private final LocationDTO pos2;
-    private final Map<TeamType, TeamRegion> regionData;
-    private final Map<TeamType, String> regionPlayer;
+    public final Map<TeamType, TeamRegion> teamRegionMap;
+    public  final Map<TeamType, String> regionPlayerUniqueIdMap;
     private GameStatus gameStatus;
     private boolean gaming;
     private boolean delaying;
     private boolean retry;
-    private Map<TeamType, Boolean> acceptingData;
-    private int remainSecond;
+    public Map<TeamType, Boolean> isAcceptedMap;
+    public int remainSecond;
     private List<String> commands;
+
+    private int second = 0;
 
     public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2) {
         this(name, pos1, pos2, new HashMap<>(), new HashMap<>(), GameStatus.NOT_STARTED, 0, new ArrayList<>());
     }
-
-    public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2, Map<TeamType, TeamRegion> regionData, Map<TeamType, String> regionPlayer, GameStatus gameStatus, int remainSecond,List<String> commands) {
+    public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2, Map<TeamType, TeamRegion> teamRegionMap, Map<TeamType, String> regionPlayerUniqueIdMap, GameStatus gameStatus, int remainSecond, List<String> commands) {
         this.name = name;
         this.pos1 = pos1;
         this.pos2 = pos2;
-        this.regionData = regionData;
-        this.regionPlayer = regionPlayer;
+        this.teamRegionMap = teamRegionMap;
+        this.regionPlayerUniqueIdMap = regionPlayerUniqueIdMap;
         this.gameStatus = gameStatus;
         this.remainSecond = remainSecond;
         this.commands = commands;
     }
-
+    public GameStatus getGameStatus() {
+        return gameStatus;
+    }
     public void setTeamToPlayer(TeamType teamType, Player player) {
-        regionPlayer.put(teamType, player.getUniqueId().toString());
+        regionPlayerUniqueIdMap.put(teamType, player.getUniqueId().toString());
     }
-
-    public TeamType getTeam(Player player) {
-        if (regionPlayer.get(TeamType.RED).equals(player.getUniqueId().toString())) {
-            return TeamType.RED;
-        }
-        return TeamType.BLUE;
+    public TeamType getTeam(@NotNull Player player) {
+        return regionPlayerUniqueIdMap.get(TeamType.RED).equals(player.getUniqueId().toString())
+                ? TeamType.RED
+                : TeamType.BLUE;
     }
-
     public void restart() {
-        prepareGame(false);
-        startBossBarTimer();
+        prepareMatch(false);
     }
-
     public void start() {
-        prepareGame(true);
-        startBossBarTimer();
+        prepareMatch(true);
     }
-
     public void waitPlayer(Player quitPlayer) {
-        delaying = true;
-        TeamType joining;
-        if (regionPlayer.get(TeamType.RED).equals(quitPlayer.getUniqueId().toString())) {
-            joining = TeamType.BLUE;
-        } else {
-            joining = TeamType.RED;
-        }
-        Player onlinePlayer = Bukkit.getPlayer(UUID.fromString(regionPlayer.get(joining)));
-        onlinePlayer.teleport(regionData.get(joining).getStartingLocation().toLocation());
+        gameStatus = GameStatus.PAUSED;
 
-        int index = 0;
-        for (int i = Config.WAITING_PLAYER_SECOND; i >= 0; i--) {
-            int finalI = i;
-
-            if (finalI == 0) {
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if (delaying && !quitPlayer.isOnline()) {
-                            gaming = false;
-                            delaying = false;
-
-                            User onlineUser = UserManager.getInstance().get(onlinePlayer);
-                            User offlineUser = UserManager.getInstance().get(quitPlayer);
-
-                            onlineUser.setStraight(onlineUser.getStraight() + 1);
-                            offlineUser.setStraight(0);
-                            Lang.send(onlinePlayer, Lang.FINISH_WINNER, s -> s);
-                            if (RewardManager.getInstance().get(onlineUser.getStraight()).size() != 0 && !onlineUser.getAcquiredRewards().contains(onlineUser.getStraight())) {
-                                Lang.send(onlinePlayer, Lang.AVAILABLE_TO_GET_REWARD, s -> s);
-                                return;
-                            }
-
-                            onlineUser.quit();
-                            offlineUser.quit();
-
-                            regionPlayer.clear();
-                        }
-                    }
-                }.runTaskLater(Main.getInstance(), 20 * index);
-            } else {
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        Lang.send(onlinePlayer, Lang.WAITING_PLAYER, s -> {
-                            return s.replaceAll("%player%", quitPlayer.getName())
-                                    .replaceAll("%second%", finalI + "");
-                        });
-                    }
-                }.runTaskLater(Main.getInstance(), 20 * index);
-                index++;
-            }
+        // 상대 플레이어를 스타팅 지역으로 이동
+        Player opponent = getOpponent(quitPlayer);
+        teleportToStartingLocation(opponent);
+        // 나간 플레이어가 다시 접속할 때까지 대기
+        waitPlayerTimer(opponent, quitPlayer);
+        // 게임이 완전히 종료되면 보상 지급, 게임 취소
+        if(gameStatus.equals(GameStatus.NOT_STARTED)) {
+            giveReward(opponent, quitPlayer);
+            cancelGame();
         }
     }
+    public void askRestartWhenNotDraw(Player winner, Player loser) {
+        prepareMatchReplayRequest();
+        // 승자, 패자 플레이어를 스타팅 지역으로 이동
+        teleportToStartingLocation(winner);
+        teleportToStartingLocation(loser);
+        // 보상 지급
+        giveReward(winner, loser);
 
-    public void askRestart(Player winner, Player loser) {
-        delaying = true;
-        if (regionPlayer.get(TeamType.BLUE).equals(winner.getUniqueId().toString())) {
-            winner.teleport(regionData.get(TeamType.BLUE).getStartingLocation().toLocation());
-            loser.teleport(regionData.get(TeamType.RED).getStartingLocation().toLocation());
-        } else {
-            winner.teleport(regionData.get(TeamType.RED).getStartingLocation().toLocation());
-            loser.teleport(regionData.get(TeamType.BLUE).getStartingLocation().toLocation());
-        }
-        UserManager userManager = UserManager.getInstance();
-        User winUser = userManager.get(winner);
-        User loseUser = userManager.get(loser);
-        winUser.setStraight(winUser.getStraight() + 1);
-        loseUser.setStraight(0);
         Lang.send(winner, Lang.FINISH_WINNER, s -> s);
         Lang.send(loser, Lang.FINISH_LOSER, s -> s);
-        if (RewardManager.getInstance().get(winUser.getStraight()).size() != 0 && !winUser.getAcquiredRewards().contains(winUser.getStraight())) {
-            Lang.send(winner, Lang.AVAILABLE_TO_GET_REWARD, s -> s);
-            return;
-        }
         Lang.send(winner, Lang.ASK_RETRY, s -> s);
         Lang.send(loser, Lang.ASK_RETRY, s -> s);
-        retry = true;
-        acceptingData = new HashMap<>();
-        acceptingData.put(TeamType.RED, false);
-        acceptingData.put(TeamType.BLUE, false);
     }
-
-    public void askRestart() {
-        delaying = true;
-        for (String uuid : regionPlayer.values()) {
+    public void askRestartWhenDraw() {
+        prepareMatchReplayRequest();
+        // 플레이어들을 스타팅 지역으로 이동
+        regionPlayerUniqueIdMap.values().forEach(uuid -> {
             Player player = Bukkit.getPlayer(UUID.fromString(uuid));
+            teleportToStartingLocation(player);
 
-            if (regionPlayer.get(TeamType.BLUE).equals(player.getUniqueId().toString())) {
-                player.teleport(regionData.get(TeamType.BLUE).getStartingLocation().toLocation());
-            } else {
-                player.teleport(regionData.get(TeamType.RED).getStartingLocation().toLocation());
-            }
             Lang.send(player, Lang.DRAW, s -> s);
             Lang.send(player, Lang.ASK_RETRY, s -> s);
-        }
-        retry = true;
-        acceptingData = new HashMap<>();
-        acceptingData.put(TeamType.RED, false);
-        acceptingData.put(TeamType.BLUE, false);
+        });
     }
+    public void cancelByLogout(OfflinePlayer offlinePlayer) {
+        prepareCancel();
 
-    public void cancel(OfflinePlayer quitPlayer) {
-        // 게임 중단
-        stopBossBarTimer();
-        gaming = false;
-        delaying = false;
-        Player onlinePlayer;
-        OfflinePlayer offlinePlayer = quitPlayer;
-        if (regionPlayer.get(TeamType.RED).equals(quitPlayer.getUniqueId().toString())) {
-            onlinePlayer = Bukkit.getPlayer(UUID.fromString(regionPlayer.get(TeamType.BLUE)));
-        } else {
-            onlinePlayer = Bukkit.getPlayer(UUID.fromString(regionPlayer.get(TeamType.RED)));
-        }
-        Lang.send(onlinePlayer, Lang.PVP_CANCEL_BY_LOGOUT, s -> s.replaceAll("%player%", offlinePlayer.getName()));
-        UserManager.getInstance().get(quitPlayer.getUniqueId().toString()).quit();
-        UserManager.getInstance().get(onlinePlayer).quit();
-        regionPlayer.clear();
+        if(offlinePlayer.getPlayer() == null) return;
+        Player opponent = getOpponent(offlinePlayer.getPlayer());
+        // 상대방이 온라인이면 quit()
+        if(opponent != null) UserManager.getInstance().get(opponent).quit();
+        Lang.send(opponent, Lang.PVP_CANCEL_BY_LOGOUT, s -> s.replaceAll("%player%",Objects.toString(offlinePlayer.getName(), "")));
     }
+    public void cancelByReject(Player rejectingPlayer) {
+        prepareCancel();
 
-    public void cancel(Player rejectingPlayer) {
-        // 게임 중단
-        stopBossBarTimer();
-        gaming = false;
-        delaying = false;
-        for (String uuid : regionPlayer.values()) {
+        regionPlayerUniqueIdMap.values().forEach(uuid -> {
             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
-            if (offlinePlayer.isOnline()) {
-                Lang.send(offlinePlayer.getPlayer(), Lang.REJECT_RETRY, s -> s.replaceAll("%player%", rejectingPlayer.getName()));
-            }
-            User user = UserManager.getInstance().get(uuid);
-            user.quit();
-        }
-        regionPlayer.clear();
+            // 온라인 플레이어면 quit()
+            if(offlinePlayer.getPlayer() != null) UserManager.getInstance().get(offlinePlayer.getPlayer()).quit();
+            // 오프라인 플레이어면 거절 메시지 전송
+            if (offlinePlayer.isOnline()) Lang.send(offlinePlayer.getPlayer(), Lang.REJECT_RETRY, s -> s.replaceAll("%player%", rejectingPlayer.getName()));
+        });
     }
+    public void cancelGame() {
+        prepareCancel();
 
+        regionPlayerUniqueIdMap.values().forEach(uuid -> {
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
+            // 온라인 플레이어면 quit()
+            if(offlinePlayer.getPlayer() != null) UserManager.getInstance().get(offlinePlayer.getPlayer()).quit();
+        });
+    }
     @Override
     public void write() {
         final File PATH = new File(DIRECTORY, name + ".yml");
         YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(PATH);
+        // name
         yamlConfiguration.set("name", name);
+        // pos
         pos1.writeYAML(yamlConfiguration.createSection("pos1"));
         pos2.writeYAML(yamlConfiguration.createSection("pos2"));
+        // teamRegion
         ConfigurationSection teamRegionSection = yamlConfiguration.createSection("regionData");
-        for (TeamType teamType : regionData.keySet()) {
-            TeamRegion teamRegion = regionData.get(teamType);
+        teamRegionMap.forEach((teamType, teamRegion) -> {
             teamRegionSection.set(teamType.name() + ".teamType", teamType.name());
-            LocationDTO startingLocation = teamRegion.getStartingLocation();
-            if (startingLocation != null) {
-                startingLocation.writeYAML(teamRegionSection.createSection(teamType.name() + ".startingLocation"));
-            }
-            List<ItemStack> itemPackage = teamRegion.getItemPackage();
-            if (itemPackage != null) {
-                for (int i = 0; i < itemPackage.size(); i++) {
-                    teamRegionSection.set(teamType.name() + ".items." + i, itemPackage.get(i));
-                }
-            }
-        }
-        if (gaming) {
+            LocationDTO startingLocation = teamRegion.startingLocation;
+            if (startingLocation != null) startingLocation.writeYAML(teamRegionSection.createSection(teamType.name() + ".startingLocation"));
+
+            List<ItemStack> itemPackage = teamRegion.itemPackage;
+            if (itemPackage != null) for(int i = 0; i < itemPackage.size(); i++) teamRegionSection.set(teamType.name() + ".items." + i, itemPackage.get(i));
+        });
+        // regionPlayer
+        if(GameStatus.isInGame(gameStatus)) {
             ConfigurationSection gamingSection = yamlConfiguration.createSection("regionPlayer");
-            for (Map.Entry<TeamType, String> entry : regionPlayer.entrySet()) {
-                gamingSection.set(entry.getKey().name(), entry.getValue());
-            }
+            regionPlayerUniqueIdMap.forEach((teamType, uuid) -> gamingSection.set(teamType.name(), uuid));
             yamlConfiguration.set("remainSecond", remainSecond);
         }
-        // 재시작, 종료시  실행될 명령어
-        // commands 설정값이 없으면 새로 생성
-        if(!yamlConfiguration.contains(COMMANDS)) {
-            // List<String> 섹션을 만들고 예제도 같이 넣어준다.
-            yamlConfiguration.set(COMMANDS, new ArrayList<>(List.of("명령어1","명령어2")));
-        }
-        if(!yamlConfiguration.contains(GAME_STATUS)) {
-            yamlConfiguration.set(GAME_STATUS, DEFAULT_GAME_STATUS);
-        }
+        // commands
+        if(!yamlConfiguration.contains(COMMANDS)) yamlConfiguration.set(COMMANDS, new ArrayList<>(List.of("명령어1","명령어2")));
+        // gameStatus
+        if(!yamlConfiguration.contains(GAME_STATUS)) yamlConfiguration.set(GAME_STATUS, DEFAULT_GAME_STATUS);
+
+        // save
         try {
             yamlConfiguration.save(PATH);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warning("파일 저장 오류 발생. Region: "+name+" Error: "+e.getMessage());
         }
     }
-
-    // commands 실행
     public void executeCommands() {
-        for (String command : commands) {
+        commands.forEach(command -> {
             try {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
             } catch (Exception e) {
                 // 오류 로그 발생, 해당 Region 의 이름과 함께 출력
                 logger.warning("명령어 오류 발생. Region: "+name+" Command: "+command+" Error: "+e.getMessage());
             }
-        }
+        });
     }
 
-    public int getRemainSecond() {
-        return remainSecond;
-    }
-
-    public void setRemainSecond(int remainSecond) {
-        this.remainSecond = remainSecond;
-    }
-
+    // TODO : remove deprecated methods
+    @Deprecated
     public boolean isRetry() {
         return retry;
     }
-
-
-    public Map<TeamType, Boolean> getAcceptingData() {
-        return acceptingData;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Map<TeamType, TeamRegion> getRegionData() {
-        return regionData;
-    }
-
-    public Map<TeamType, String> getRegionPlayer() {
-        return regionPlayer;
-    }
-
+    @Deprecated
     public boolean isGaming() {
         return gaming;
     }
-
+    @Deprecated
     public boolean isDelaying() {
         return delaying;
     }
-
+    @Deprecated
     public void setDelaying(boolean delaying) {
         this.delaying = delaying;
     }
 
-    public static class TeamRegion {
-        private TeamType teamType;
-        private LocationDTO startingLocation;
-        private List<ItemStack> itemPackage;
-
-        public TeamRegion(TeamType teamType, LocationDTO startingLocation, List<ItemStack> itemPackage) {
-            this.teamType = teamType;
-            this.startingLocation = startingLocation;
-            this.itemPackage = itemPackage;
-        }
-
-        public LocationDTO getStartingLocation() {
-            return startingLocation;
-        }
-
-        public void setStartingLocation(LocationDTO startingLocation) {
-            this.startingLocation = startingLocation;
-        }
-
-        public List<ItemStack> getItemPackage() {
-            return itemPackage;
-        }
-
-        public void setItemPackage(List<ItemStack> itemPackage) {
-            this.itemPackage = itemPackage;
-        }
-    }
-
-    private void prepareGame(boolean isNewGame) {
-        List<Player> players = new ArrayList<>();
-        for (Map.Entry<TeamType, String> entry : regionPlayer.entrySet()) {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(entry.getValue()));
-            if (!offlinePlayer.isOnline()) {
-                cancel(offlinePlayer);
-                return;
-            }
-            if (isNewGame) {
-                User user = UserManager.getInstance().get(entry.getValue());
-                user.start(name);
-            }
-            TeamRegion teamRegion = regionData.get(entry.getKey());
-            Player player = offlinePlayer.getPlayer();
-            player.getInventory().clear();
-            if (teamRegion.getItemPackage() != null) {
-                for (ItemStack itemStack : teamRegion.getItemPackage()) {
-                    player.getInventory().addItem(itemStack);
-                }
-            }
-            player.setHealth(player.getMaxHealth());
-            player.setFoodLevel(20);
-            player.teleport(teamRegion.getStartingLocation().toLocation());
-            players.add(player);
-        }
-        delaying = true;
-        gaming = true;
-        remainSecond = Config.GAME_TIME;
-
-        // 게임 초기화
-        resetGame(players);
-
-        // 게임 시작전
-        beforeStart(players);
-    }
-    private void resetGame(List<Player> players) {
-        executeCommands();
-        resetGameTimer(players);
-    }
-    private void resetGameTimer(List<Player> players) {
-        int index = 0;
-        for (int i = Config.GAME_RESET_TIME; i >= 0; i--) {
-            int finalI = i;
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (!gaming) {
-                        return;
-                    }
-                    if (finalI == 0) {
-                        for (Player player : players) {
-                            Lang.send(player, Lang.RESET_GAME, s -> s);
-                        }
-                        prepareGame(false);
-                    } else {
-                        for (Player player : players) {
-                            Lang.send(player, Lang.WAITING_RESET_GAME, s -> s.replaceAll("%seconds%", finalI + ""));
-                        }
-                    }
-                }
-            }.runTaskLater(Main.getInstance(), 20 * index);
-            index++;
-        }
-    }
-    private void beforeStart(List<Player> players) {
-        beforeStartTimer(players);
-    }
-    private void beforeStartTimer(List<Player> players) {
-        int index = 0;
-        for (int i = Config.START_COOLTIME; i >= 0; i--) {
-            int finalI = i;
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (!gaming) {
-                        return;
-                    }
-                    if (finalI == 0) {
-                        delaying = false;
-                        for (Player player : players) {
-                            Lang.send(player, Lang.START_GAME, s -> {
-                                return s;
-                            });
-                        }
-                    } else {
-                        for (Player player : players) {
-                            Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", finalI + ""));
-                        }
-                    }
-                }
-            }.runTaskLater(Main.getInstance(), 20 * index);
-            index++;
-        }
-    }
     // boss bar timer
     public void startBossBarTimer() {
         BossBarTimer bossBarTimer = BossBarTimerManager.getTimer(name, Main.getInstance(), Config.GAME_TIME);
-        // add all region players
-        for (String uuid : regionPlayer.values()) {
-            Player player = Bukkit.getPlayer(UUID.fromString(uuid));
-            bossBarTimer.addPlayer(player);
-        }
+        // add all players
+        regionPlayerUniqueIdMap.values().forEach(uuid -> bossBarTimer.addPlayer(Bukkit.getPlayer(UUID.fromString(uuid))));
         bossBarTimer.start();
     }
-
     public void stopBossBarTimer() {
         BossBarTimerManager.removeTimer(name);
+    }
+
+    // inner class
+    public static class TeamRegion {
+        public LocationDTO startingLocation;
+        public List<ItemStack> itemPackage;
+
+        public TeamRegion(LocationDTO startingLocation, List<ItemStack> itemPackage) {
+            this.startingLocation = startingLocation;
+            this.itemPackage = itemPackage;
+        }
+    }
+
+    // private methods
+    private void prepareMatch(boolean isNewGame) {
+        // 경기에 참가하는 플레이어 목록
+        List<Player> players = getReadyPlayers(isNewGame);
+        if (players == null) return;
+        // 경기 초기화
+        initializeMatch(players);
+        // 경기 대기
+        waitMatch(players);
+        // 경기 시간 초기화
+        remainSecond = Config.GAME_TIME;
+        // 게임 상태 경기 중으로 변경
+        gameStatus = GameStatus.MATCH_IN_PROGRESS;
+        // 보스바 타이머 시작
+        startBossBarTimer();
+    }
+    private void initializeMatch(@NotNull List<Player> players) {
+        gameStatus = GameStatus.MATCH_INITIALIZED;
+        executeCommands();
+        initializeMatchTimer(players);
+    }
+    private void initializeMatchTimer(@NotNull List<Player> players) {
+        second = Config.GAME_RESET_TIME;
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (second-- <= 0) cancel();
+                else players.forEach(player -> Lang.send(player, Lang.WAITING_RESET_GAME, s -> s.replaceAll("%seconds%", second + "")));
+            }
+        }.runTaskTimer(Main.getInstance(), 0, 20);
+
+        players.forEach(player -> Lang.send(player, Lang.RESET_GAME, s -> s));
+    }
+    private void waitMatch(@NotNull List<Player> players) {
+        gameStatus = GameStatus.MATCH_WAITING;
+        waitMatchTimer(players);
+    }
+    private void waitMatchTimer(@NotNull List<Player> players) {
+        second = Config.START_COOLTIME;
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (second-- <= 0) cancel();
+                else players.forEach(player -> Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", second + "")));
+            }
+        }.runTaskTimer(Main.getInstance(), 0, 20);
+        players.forEach(player -> Lang.send(player, Lang.START_GAME, s -> s));
+    }
+    /**
+     * 나간 플레이어를 대기시키는 타이머 <br><br>
+     * 나간 플레이어가 다시 접속하면 gameStatus 를 MATCH_IN_PROGRESS 로 변경 후 경기 재개 <br><br>
+     * 대기시간이 초과하면 gameStatus 를 NOT_STARTED 로 변경 후 종료
+     */
+    private void waitPlayerTimer(Player waitPlayer, Player quitPlayer) {
+        // 나간 플레이어가 다시 접속할 때까지 대기
+        second = Config.WAITING_PLAYER_SECOND;
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                // 나갔던 유저가 다시 접속하면 종료
+                if (quitPlayer.isOnline()) {
+                    // 게임 재개
+                    gameStatus = GameStatus.MATCH_IN_PROGRESS;
+                    cancel();
+                }
+                // 대기해도 안들어오면 경기 종료
+                if (second-- <= 0)  {
+                    gameStatus = GameStatus.NOT_STARTED;
+                    cancel();
+                }
+                else Lang.send(waitPlayer, Lang.WAITING_PLAYER, s -> s.replaceAll("%player%", quitPlayer.getName()).replaceAll("%second%", second + ""));
+            }
+        }.runTaskTimer(Main.getInstance(), 0, 20);
+    }
+    /**
+     * 보상 지급
+     * @param winPlayer 승리한 플레이어
+     * @param losePlayer 패배한 플레이어
+     */
+    private void giveReward(Player winPlayer, Player losePlayer) {
+        User winUser = UserManager.getInstance().get(winPlayer);
+        User loseUser = UserManager.getInstance().get(losePlayer);
+        winUser.setStraight(winUser.getStraight() + 1);
+        loseUser.setStraight(0);
+        // 보상 지급을 할 수 있으면 보상 지급
+        if (!RewardManager.getInstance().get(winUser.getStraight()).isEmpty() && !winUser.getAcquiredRewards().contains(winUser.getStraight())) {
+            Lang.send(winPlayer, Lang.AVAILABLE_TO_GET_REWARD, s -> s);
+        }
+    }
+    /**
+     * 게임 재시작 요청 초기화<br><br>
+     * 게임 상태를 MATCH_REPLAY_REQUESTED 로 변경하고 게임 수락 여부 초기화
+     */
+    private void prepareMatchReplayRequest() {
+        gameStatus = GameStatus.MATCH_REPLAY_REQUESTED;
+        // 게임 수락 여부 초기화
+        isAcceptedMap = new HashMap<>();
+    }
+    /**
+     * 시작 지역으로 이동
+     * @param player 플레이어
+     */
+    private void teleportToStartingLocation(Player player) {
+        if(player == null) return;
+        player.teleport(teamRegionMap.get(getTeam(player)).startingLocation.toLocation());
+    }
+    /**
+     * 상대방 플레이어를 반환
+     * @param player 플레이어
+     */
+    private Player getOpponent(@NotNull Player player) {
+        String opponentUUID = getTeam(player) == TeamType.RED
+                ? regionPlayerUniqueIdMap.get(TeamType.BLUE)
+                : regionPlayerUniqueIdMap.get(TeamType.RED);
+        return Bukkit.getPlayer(UUID.fromString(opponentUUID));
+    }
+    /**
+     * 게임 취소 준비, 게임 상태를 NOT_STARTED 로 변경하고 보스바 타이머를 중지
+     */
+    private void prepareCancel() {
+        gameStatus = GameStatus.NOT_STARTED;
+        stopBossBarTimer();
+    }
+    /**
+     * 플레이어들을 준비시키고 플레이어 목록을 반환
+     */
+    private List<Player> getReadyPlayers(boolean isNewGame) {
+        // 경기에 참가하는 플레이어 목록
+        List<Player> players = new ArrayList<>();
+        // 플레이어들 초기화
+        for (TeamType teamType: regionPlayerUniqueIdMap.keySet()) {
+            String uuid = regionPlayerUniqueIdMap.get(teamType);
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
+            // 오프라인 플레이어면 취소
+            if (!offlinePlayer.isOnline()) {
+                cancelByLogout(offlinePlayer);
+                return null;
+            }
+            // 새게임이면 User.start() 호출
+            if (isNewGame) UserManager.getInstance().get(uuid).start(name);
+
+            TeamRegion teamRegion = teamRegionMap.get(teamType);
+            Player player = offlinePlayer.getPlayer();
+            if(player == null) continue;
+            // 인벤토리 초기화
+            player.getInventory().clear();
+            // 아이템 지급
+            if (teamRegion.itemPackage != null) teamRegion.itemPackage.forEach(itemStack -> player.getInventory().addItem(itemStack));
+            // 체력, 포만도, 위치 초기화
+            player.setHealth(player.getMaxHealth());
+            player.setFoodLevel(20);
+            teleportToStartingLocation(player);
+            // 플레이어 추가
+            players.add(player);
+        }
+        return players;
     }
 }

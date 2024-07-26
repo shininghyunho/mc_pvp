@@ -7,6 +7,7 @@ import kr.utila.pvp.managers.UserManager;
 import kr.utila.pvp.managers.pvp.RegionManager;
 import kr.utila.pvp.objects.LocationDTO;
 import kr.utila.pvp.objects.User;
+import kr.utila.pvp.objects.region.GameStatus;
 import kr.utila.pvp.objects.region.PVPRegion;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
@@ -42,10 +43,10 @@ public class MainListener implements Listener {
         }
         if (user.getCurrentPVP() != null && RegionManager.getInstance().get(user.getCurrentPVP()).isDelaying()) {
             PVPRegion pvpRegion = RegionManager.getInstance().get(user.getCurrentPVP());
-            for (String member : pvpRegion.getRegionPlayer().values()) {
-                Player p = Bukkit.getPlayer(UUID.fromString(member));
+            pvpRegion.regionPlayerUniqueIdMap.values().forEach(uuid -> {
+                Player p = Bukkit.getPlayer(UUID.fromString(uuid));
                 Lang.send(p, Lang.RESTART, s -> s.replaceAll("%player%", player.getName()));
-            }
+            });
             RegionManager.getInstance().get(user.getCurrentPVP()).setDelaying(false);
         }
     }
@@ -56,8 +57,8 @@ public class MainListener implements Listener {
         User user = UserManager.getInstance().get(player);
         if (user.getCurrentPVP() != null) {
             PVPRegion pvpRegion = RegionManager.getInstance().get(user.getCurrentPVP());
-            if (pvpRegion.isDelaying()) {
-                pvpRegion.cancel(player);
+            if (pvpRegion.getGameStatus().equals(GameStatus.PAUSED)) {
+                pvpRegion.cancelByReject(player);
             } else {
                 pvpRegion.waitPlayer(player);
             }
@@ -107,7 +108,7 @@ public class MainListener implements Listener {
             if (user.getCurrentPVP() != null) {
                 if (player.getHealth() <= event.getDamage()) {
                     event.setCancelled(true);
-                    RegionManager.getInstance().get(user.getCurrentPVP()).askRestart((Player) event.getDamager(), player);
+                    RegionManager.getInstance().get(user.getCurrentPVP()).askRestartWhenNotDraw((Player) event.getDamager(), player);
                 }
             }
         }

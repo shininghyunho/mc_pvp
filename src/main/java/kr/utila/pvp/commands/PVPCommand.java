@@ -92,6 +92,7 @@ public class PVPCommand {
                                         return false;
                                     }
                                     PVPRegion pvpRegion = RegionManager.getInstance().getAvailableRegion();
+                                    pvpRegion.regionPlayerUniqueIdMap.clear();
                                     pvpRegion.setTeamToPlayer(TeamType.RED, player);
                                     pvpRegion.setTeamToPlayer(TeamType.BLUE, Bukkit.getPlayer(UUID.fromString(inviteData.get(player.getUniqueId().toString()))));
                                     pvpRegion.start();
@@ -109,13 +110,9 @@ public class PVPCommand {
                                 if (!pvpRegion.isRetry()) {
                                     return false;
                                 }
-                                pvpRegion.getAcceptingData().put(pvpRegion.getTeam(player), true);
+                                pvpRegion.isAcceptedMap.put(pvpRegion.getTeam(player), true);
                                 Lang.send(player, Lang.ACCEPT_RETRY, s -> s.replaceAll("%player%", player.getName()));
-                                for (boolean status : pvpRegion.getAcceptingData().values()) {
-                                    if (!status) {
-                                        return false;
-                                    }
-                                }
+                                for (boolean isAccepted : pvpRegion.isAcceptedMap.values()) if (!isAccepted) return false;
                                 pvpRegion.restart();
                                 return false;
                             }
@@ -130,16 +127,16 @@ public class PVPCommand {
                                         OfflinePlayer offlinePlayer;
                                         TeamType teamType = pvpRegion.getTeam(player);
                                         if (teamType == TeamType.BLUE) {
-                                            offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(pvpRegion.getRegionPlayer().get(TeamType.RED)));
+                                            offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(pvpRegion.regionPlayerUniqueIdMap.get(TeamType.RED)));
                                         } else {
-                                            offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(pvpRegion.getRegionPlayer().get(TeamType.BLUE)));
+                                            offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(pvpRegion.regionPlayerUniqueIdMap.get(TeamType.BLUE)));
                                         }
-                                        pvpRegion.cancel(offlinePlayer);
+                                        pvpRegion.cancelByLogout(offlinePlayer);
                                         return false;
                                     }
                                     return false;
                                 }
-                                pvpRegion.cancel(player);
+                                pvpRegion.cancelByReject(player);
                                 return false;
                             }
                             case "보상" -> {

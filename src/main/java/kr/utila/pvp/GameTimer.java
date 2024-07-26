@@ -22,24 +22,24 @@ public class GameTimer {
                         continue;
                     }
                     if (pvpRegion.isGaming()) {
-                        int remainSecond = pvpRegion.getRemainSecond() - 1;
-                        pvpRegion.setRemainSecond(remainSecond);
+                        int remainSecond = pvpRegion.remainSecond - 1;
+                        pvpRegion.remainSecond = remainSecond;
                         if (remainSecond % 10 == 0 || remainSecond <= 10) {
-                            for (String uuid : pvpRegion.getRegionPlayer().values()) {
+                            for (String uuid : pvpRegion.regionPlayerUniqueIdMap.values()) {
                                 Player player = Bukkit.getPlayer(UUID.fromString(uuid));
                                 Lang.send(player, Lang.BROADCAST_REMAIN_COUNT, s -> s.replaceAll("%second%", remainSecond + ""));
                             }
                         }
                         if (remainSecond == 0) {
                             Player player1, player2;
-                            player1 = Bukkit.getPlayer(UUID.fromString(pvpRegion.getRegionPlayer().get(TeamType.RED)));
-                            player2 = Bukkit.getPlayer(UUID.fromString(pvpRegion.getRegionPlayer().get(TeamType.BLUE)));
+                            player1 = Bukkit.getPlayer(UUID.fromString(pvpRegion.regionPlayerUniqueIdMap.get(TeamType.RED)));
+                            player2 = Bukkit.getPlayer(UUID.fromString(pvpRegion.regionPlayerUniqueIdMap.get(TeamType.BLUE)));
                             if (player1.getHealth() == player2.getHealth()) {
-                                pvpRegion.askRestart();
+                                pvpRegion.askRestartWhenDraw();
                             } else if (player1.getHealth() > player2.getHealth()) {
-                                pvpRegion.askRestart(player1, player2);
+                                pvpRegion.askRestartWhenNotDraw(player1, player2);
                             } else {
-                                pvpRegion.askRestart(player2, player1);
+                                pvpRegion.askRestartWhenNotDraw(player2, player1);
                             }
                         }
                     }
