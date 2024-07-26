@@ -24,8 +24,8 @@ public class PVPCommand {
         new SimpleCommandBuilder("pvp")
                 .aliases("피브이피")
                 .commandExecutor((sender, command, label, args) -> {
-                    if (sender instanceof Player) {
-                        Player player = (Player) sender;
+                    if (sender instanceof Player player) {
+                        // 메시지 없이 명령어만 입력했을 때 사용법 출력
                         if (args.length == 0) {
                             player.sendMessage("/PVP 신청 [닉네임] [메세지]");
                             player.sendMessage("/PVP 수락");
@@ -36,44 +36,59 @@ public class PVPCommand {
                             player.sendMessage("/PVP 보상");
                             return false;
                         }
-                        switch (args[0]) {
+                        // validate command
+                        if(args.length < 2) return false;
+
+                        String op = args[0];
+                        switch (op) {
                             case "신청" -> {
+                                // 준비된 경기장이 없을 때
                                 if (!RegionManager.getInstance().hasAvailableSpace()) {
                                     Lang.send(player, Lang.NON_AVAILABLE_PLACE, s -> s);
                                     return false;
                                 }
-                                Player target = Bukkit.getPlayer(args[1]);
-                                if (UserManager.getInstance().get(target).getCurrentPVP() != null) {
+                                String opponentName = args[1];
+                                Player opponent = Bukkit.getPlayer(opponentName);
+                                // 플레이어 명이 잘못되었을 때
+                                if(opponent == null) return false;
+                                // 플레이어가 이미 PVP 중일 때
+                                if (UserManager.getInstance().get(opponent).getCurrentPVP() != null) {
                                     Lang.send(player, Lang.ALREADY_PVP, s -> s);
                                     return false;
                                 }
-                                if (inviteData.containsKey(target.getUniqueId().toString())) {
+                                // 플레이어가 이미 초대되었을 때
+                                if (inviteData.containsKey(opponent.getUniqueId().toString())) {
                                     Lang.send(player, Lang.ALREADY_INVITING, s -> s);
                                     return false;
                                 }
+                                // 플레이어가 이미 초대를 보냈을 때
                                 if(UserManager.getInstance().get(player).getCurrentPVP() != null) {
                                     Lang.send(player, Lang.ALREADY_PVP_SELF, s -> s);
                                     return false;
                                 }
-                                String message = "";
-                                for (int i = 2; i < args.length; i++) {
-                                    message += args[i] + " ";
-                                }
-                                target.sendMessage(message);
-                                target.sendTitle(message, "", 10, 40, 10);
-                                Lang.sendClickableCommand(target, Lang.ACCEPT_INVITATION);
+                                // 초대가 성공적이므로 초대 메시지를 보냄
+                                StringBuilder message = new StringBuilder();
+                                for (int i = 2; i < args.length; i++) message.append(args[i]).append(" ");
+                                opponent.sendMessage(message.toString());
+                                opponent.sendTitle(message.toString(), "", 10, 40, 10);
+                                Lang.sendClickableCommand(opponent, Lang.ACCEPT_INVITATION);
                                 player.sendMessage("§7[보낸요청] " + message);
-                                inviteData.put(target.getUniqueId().toString(), player.getUniqueId().toString());
+
+                                // 초대 데이터 저장
+                                inviteData.put(opponent.getUniqueId().toString(), player.getUniqueId().toString());
+
+                                // 기다리다가 초대 취소
+                                int inviteCancelTime = 30;
                                 new BukkitRunnable() {
                                     @Override
                                     public void run() {
-                                        if (inviteData.containsKey(target.getUniqueId().toString())) {
-                                            if (inviteData.get(target.getUniqueId().toString()).equals(player.getUniqueId().toString())) {
-                                                inviteData.remove(target.getUniqueId());
+                                        if (inviteData.containsKey(opponent.getUniqueId().toString())) {
+                                            if (inviteData.get(opponent.getUniqueId().toString()).equals(player.getUniqueId().toString())) {
+                                                inviteData.remove(opponent.getUniqueId().toString());
                                             }
                                         }
                                     }
-                                }.runTaskLater(Main.getInstance(), 20 * 30);
+                                }.runTaskLater(Main.getInstance(), 20 * inviteCancelTime);
                                 return false;
                             }
                             case "거절" -> {

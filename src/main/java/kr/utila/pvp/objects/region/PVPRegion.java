@@ -78,17 +78,11 @@ public class PVPRegion implements Writable {
     }
     public void waitPlayer(Player quitPlayer) {
         gameStatus = GameStatus.PAUSED;
-
         // 상대 플레이어를 스타팅 지역으로 이동
         Player opponent = getOpponent(quitPlayer);
         teleportToStartingLocation(opponent);
         // 나간 플레이어가 다시 접속할 때까지 대기
         waitPlayerTimer(opponent, quitPlayer);
-        // 게임이 완전히 종료되면 보상 지급, 게임 취소
-        if(gameStatus.equals(GameStatus.NOT_STARTED)) {
-            giveReward(opponent, quitPlayer);
-            cancelGame();
-        }
     }
     public void askRestartWhenNotDraw(Player winner, Player loser) {
         prepareMatchReplayRequest();
@@ -238,14 +232,6 @@ public class PVPRegion implements Writable {
         if (players == null) return;
         // 경기 초기화
         initializeMatch(players);
-        // 경기 대기
-        waitMatch(players);
-        // 경기 시간 초기화
-        remainSecond = Config.GAME_TIME;
-        // 게임 상태 경기 중으로 변경
-        gameStatus = GameStatus.MATCH_IN_PROGRESS;
-        // 보스바 타이머 시작
-        startBossBarTimer();
     }
     private void initializeMatch(@NotNull List<Player> players) {
         gameStatus = GameStatus.MATCH_INITIALIZED;
@@ -257,12 +243,15 @@ public class PVPRegion implements Writable {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (second-- <= 0) cancel();
+                if (second-- <= 0) {
+                    players.forEach(player -> Lang.send(player, Lang.RESET_GAME, s -> s));
+                    // 경기 대기
+                    waitMatch(players);
+                    cancel();
+                }
                 else players.forEach(player -> Lang.send(player, Lang.WAITING_RESET_GAME, s -> s.replaceAll("%seconds%", second + "")));
             }
         }.runTaskTimer(Main.getInstance(), 0, 20);
-
-        players.forEach(player -> Lang.send(player, Lang.RESET_GAME, s -> s));
     }
     private void waitMatch(@NotNull List<Player> players) {
         gameStatus = GameStatus.MATCH_WAITING;
@@ -273,11 +262,14 @@ public class PVPRegion implements Writable {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (second-- <= 0) cancel();
+                if (second-- <= 0) {
+                    players.forEach(player -> Lang.send(player, Lang.START_GAME, s -> s));
+                    startMatch();
+                    cancel();
+                }
                 else players.forEach(player -> Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", second + "")));
             }
         }.runTaskTimer(Main.getInstance(), 0, 20);
-        players.forEach(player -> Lang.send(player, Lang.START_GAME, s -> s));
     }
     /**
      * 나간 플레이어를 대기시키는 타이머 <br><br>
@@ -294,11 +286,14 @@ public class PVPRegion implements Writable {
                 if (quitPlayer.isOnline()) {
                     // 게임 재개
                     gameStatus = GameStatus.MATCH_IN_PROGRESS;
+                    resumeMatch();
                     cancel();
                 }
                 // 대기해도 안들어오면 경기 종료
                 if (second-- <= 0)  {
                     gameStatus = GameStatus.NOT_STARTED;
+                    giveReward(waitPlayer, quitPlayer);
+                    cancelGame();
                     cancel();
                 }
                 else Lang.send(waitPlayer, Lang.WAITING_PLAYER, s -> s.replaceAll("%player%", quitPlayer.getName()).replaceAll("%second%", second + ""));
@@ -387,5 +382,17 @@ public class PVPRegion implements Writable {
             players.add(player);
         }
         return players;
+    }
+
+    /**
+     * 경기 시작
+     */
+    private void startMatch() {
+        remainSecond = Config.GAME_TIME;
+        gameStatus = GameStatus.MATCH_IN_PROGRESS;
+        startBossBarTimer();
+    }
+    private void resumeMatch() {
+        // TODO : 보스바 타이머 수정
     }
 }
