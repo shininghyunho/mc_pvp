@@ -76,19 +76,6 @@ public class PVPCommand {
 
                                 // 초대 데이터 저장
                                 inviteData.put(opponent.getUniqueId().toString(), player.getUniqueId().toString());
-
-                                // 기다리다가 초대 취소
-                                int inviteCancelTime = 30;
-                                new BukkitRunnable() {
-                                    @Override
-                                    public void run() {
-                                        if (inviteData.containsKey(opponent.getUniqueId().toString())) {
-                                            if (inviteData.get(opponent.getUniqueId().toString()).equals(player.getUniqueId().toString())) {
-                                                inviteData.remove(opponent.getUniqueId().toString());
-                                            }
-                                        }
-                                    }
-                                }.runTaskLater(Main.getInstance(), 20 * inviteCancelTime);
                                 return false;
                             }
                             case "거절" -> {
