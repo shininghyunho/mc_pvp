@@ -2,8 +2,6 @@ package kr.utila.pvp;
 
 import kr.utila.pvp.commands.PVPAdminCommand;
 import kr.utila.pvp.commands.PVPCommand;
-import kr.utila.pvp.config.Config;
-import kr.utila.pvp.config.Lang;
 import kr.utila.pvp.libraries.SimpleInventoryHolder;
 import kr.utila.pvp.listeners.MainListener;
 import kr.utila.pvp.managers.UserManager;
@@ -55,8 +53,8 @@ public final class Main extends JavaPlugin {
     }
 
     private void load() {
-        Config.load();
         Lang.load();
+        Config.load();
         try {
             RewardManager.getInstance().load();
             RegionManager.getInstance().load();

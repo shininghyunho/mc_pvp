@@ -1,6 +1,8 @@
 package kr.utila.pvp.objects;
 
 import kr.utila.pvp.Main;
+import kr.utila.pvp.managers.pvp.RegionManager;
+import kr.utila.pvp.objects.region.PVPRegion;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -13,20 +15,20 @@ import java.util.UUID;
 
 public class User implements Writable {
     private static final File DIRECTORY = new File(Main.getInstance().getDataFolder(), "users");
-    private String uuid;
+    private final String uuid;
     private int totalStraight;
     private int straight;
-    private List<Integer> acquiredRewards;
-    private String currentPVP;
+    private final List<Integer> acquiredRewards;
+    private String PVPName;
     private ItemStack[] inventoryContents;
     private LocationDTO beforeLocation;
 
-    public User(String uuid, int totalStraight, int straight, List<Integer> acquiredRewards, String currentPVP, ItemStack[] inventoryContents, LocationDTO beforeLocation) {
+    public User(String uuid, int totalStraight, int straight, List<Integer> acquiredRewards, String PVPName, ItemStack[] inventoryContents, LocationDTO beforeLocation) {
         this.uuid = uuid;
         this.totalStraight = totalStraight;
         this.straight = straight;
         this.acquiredRewards = acquiredRewards;
-        this.currentPVP = currentPVP;
+        this.PVPName = PVPName;
         this.inventoryContents = inventoryContents;
         this.beforeLocation = beforeLocation;
     }
@@ -39,7 +41,7 @@ public class User implements Writable {
         yamlConfiguration.set("totalStraight", totalStraight);
         yamlConfiguration.set("straight", straight);
         yamlConfiguration.set("acquiredRewards", acquiredRewards);
-        yamlConfiguration.set("currentPVP", currentPVP);
+        yamlConfiguration.set("PVPName", PVPName);
         if (inventoryContents != null) {
             for (int i = 0; i < inventoryContents.length; i++) {
                 yamlConfiguration.set("inventoryContents." + i, inventoryContents[i]);
@@ -57,30 +59,27 @@ public class User implements Writable {
 
     public void start(String name) {
         Player player = Bukkit.getPlayer(UUID.fromString(uuid));
-        currentPVP = name;
+        if(player == null) return;
+        PVPName = name;
         inventoryContents = player.getInventory().getContents();
         beforeLocation = LocationDTO.toLocationDTO(player.getLocation());
     }
 
     public void quit() {
         OfflinePlayer player = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
-        currentPVP = null;
-        if (!player.isOnline()) {
-            return;
-        }
+        if (!player.isOnline()) return;
+
         Player parsedPlayer = (Player) player;
-        parsedPlayer.teleport(beforeLocation.toLocation());
+        if(beforeLocation != null) parsedPlayer.teleport(beforeLocation.toLocation());
         parsedPlayer.getInventory().setContents(inventoryContents);
+
+        PVPName = null;
         inventoryContents = null;
         beforeLocation = null;
     }
 
     public int getTotalStraight() {
         return totalStraight;
-    }
-
-    public void setTotalStraight(int totalStraight) {
-        this.totalStraight = totalStraight;
     }
 
     public String getUUID() {
@@ -101,32 +100,19 @@ public class User implements Writable {
     public List<Integer> getAcquiredRewards() {
         return acquiredRewards;
     }
-
-    public void setAcquiredRewards(List<Integer> acquiredRewards) {
-        this.acquiredRewards = acquiredRewards;
+    public String getPVPName() {
+        return PVPName;
     }
-
-    public String getCurrentPVP() {
-        return currentPVP;
-    }
-
-    public void setCurrentPVP(String currentPVP) {
-        this.currentPVP = currentPVP;
-    }
-
-    public ItemStack[] getInventoryContents() {
-        return inventoryContents;
-    }
-
-    public void setInventoryContents(ItemStack[] inventoryContents) {
-        this.inventoryContents = inventoryContents;
-    }
-
     public LocationDTO getBeforeLocation() {
         return beforeLocation;
     }
 
-    public void setBeforeLocation(LocationDTO beforeLocation) {
-        this.beforeLocation = beforeLocation;
+    // 탈주했다가 경기가 끝난후 재섭했는지 여부
+    public boolean isEscapingUser() {
+        Player player = Bukkit.getPlayer(UUID.fromString(uuid));
+        if(player == null) return false;
+
+        PVPRegion pvpRegion = RegionManager.getInstance().get(PVPName);
+        return PVPName != null && pvpRegion == null;
     }
 }

@@ -1,6 +1,6 @@
 package kr.utila.pvp.managers;
 
-import kr.utila.pvp.config.Lang;
+import kr.utila.pvp.Lang;
 import kr.utila.pvp.Main;
 import kr.utila.pvp.objects.LocationDTO;
 import kr.utila.pvp.objects.User;
@@ -86,9 +86,9 @@ public class UserManager extends Manager {
             int totalStraight = yamlConfiguration.getInt("totalStraight");
             int straight = yamlConfiguration.getInt("straight");
             List<Integer> acquiredRewards = yamlConfiguration.getIntegerList("acquiredRewards");
-            String currentPVP = null;
-            if (yamlConfiguration.contains("currentPVP")) {
-                currentPVP = yamlConfiguration.getString("currentPVP");
+            String PVPName = null;
+            if (yamlConfiguration.contains("PVPName")) {
+                PVPName = yamlConfiguration.getString("PVPName");
             }
             List<ItemStack> items = null;
             if (yamlConfiguration.contains("inventoryContents")) {
@@ -101,7 +101,7 @@ public class UserManager extends Manager {
             if (yamlConfiguration.contains("beforeLocation")) {
                 beforeLocation = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("beforeLocation"));
             }
-            USERS.put(uuid, new User(uuid, totalStraight, straight, acquiredRewards, currentPVP, items == null ? null : items.toArray(new ItemStack[items.size()]), beforeLocation));
+            USERS.put(uuid, new User(uuid, totalStraight, straight, acquiredRewards, PVPName, items == null ? null : items.toArray(new ItemStack[items.size()]), beforeLocation));
         }
     }
 

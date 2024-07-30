@@ -1,7 +1,7 @@
 package kr.utila.pvp.commands;
 
-import kr.utila.pvp.config.Config;
-import kr.utila.pvp.config.Lang;
+import kr.utila.pvp.Config;
+import kr.utila.pvp.Lang;
 import kr.utila.pvp.Main;
 import kr.utila.pvp.guis.ItemSettingGUI;
 import kr.utila.pvp.guis.StraightRewardSettingGUI;
@@ -133,8 +133,8 @@ public class PVPAdminCommand {
                                     manager.saveAll();
                                     manager.load();
                                     RewardManager.getInstance().load();
-                                    Config.load();
                                     Lang.load();
+                                    Config.load();
                                     player.sendMessage("§a리로드 완료");
                                 } catch (Exception e) {
                                     e.printStackTrace();
@@ -152,7 +152,7 @@ public class PVPAdminCommand {
                         }
                         case 2 -> {
                             if (args[0].equals("진영설정") || args[0].equals("아이템설정") || args[0].equals("삭제")) {
-                                return manager.getAllRegions();
+                                return manager.getAllRegionNames();
                             }
                         }
                         case 3 -> {
