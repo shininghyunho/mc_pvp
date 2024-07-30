@@ -48,7 +48,10 @@ public class PVPCommand {
                         return false;
                     }
                     // validate command
-                    if(args.length < 2) return false;
+                    if(args.length < 2) {
+                        player.sendMessage("§c플레이어를 입력하세요.");
+                        return false;
+                    }
 
                     String op = args[0];
                     switch (op) {
@@ -56,7 +59,10 @@ public class PVPCommand {
                             Player inviter = player;
                             String inviteeName = args[1];
                             Player invitee = Bukkit.getPlayer(inviteeName);
-                            if(invitee == null) return false;
+                            if(invitee == null) {
+                                player.sendMessage("§c플레이어를 찾을 수 없습니다.");
+                                return false;
+                            }
                             if (!isValidInvite(inviter, invitee)) break;
 
                             // 초대가 성공적이므로 초대 메시지를 보냄
