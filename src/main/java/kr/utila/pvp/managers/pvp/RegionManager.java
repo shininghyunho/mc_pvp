@@ -122,9 +122,7 @@ public class RegionManager extends Manager {
                     ? yamlConfiguration.getStringList("commands")
                     : new ArrayList<>(List.of("명령어1","명령어2"));
 
-            LocationDTO pos1 = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("    private boolean gaming;\n" +
-                    "    private boolean delaying;\n" +
-                    "    private boolean retry;"));
+            LocationDTO pos1 = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("pos1"));
             LocationDTO pos2 = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("pos2"));
             Map<TeamType, PVPRegion.TeamRegion> regionData = new HashMap<>();
             if (yamlConfiguration.contains("regionData")) {
