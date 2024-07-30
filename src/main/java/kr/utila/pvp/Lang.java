@@ -48,32 +48,7 @@ public class Lang {
     public static void load() {
         Main.getInstance().saveResource("lang.yml", false);
         YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(FILE);
-        PVP_CANCEL_BY_LOGOUT = LangFormat.get(yamlConfiguration.getConfigurationSection("PVP_CANCEL_BY_LOGOUT"));
-        REJECT_REQUEST_RECEIVER = LangFormat.get(yamlConfiguration.getConfigurationSection("REJECT_REQUEST_RECEIVER"));
-        REJECT_REQUEST_SENDER = LangFormat.get(yamlConfiguration.getConfigurationSection("REJECT_REQUEST_SENDER"));
-        FINISH_WINNER = LangFormat.get(yamlConfiguration.getConfigurationSection("FINISH_WINNER"));
-        FINISH_LOSER = LangFormat.get(yamlConfiguration.getConfigurationSection("FINISH_LOSER"));
-        ACCEPT_INVITATION = LangFormat.get(yamlConfiguration.getConfigurationSection("ACCEPT_INVITATION"));
-        ASK_RETRY = LangFormat.get(yamlConfiguration.getConfigurationSection("ASK_RETRY"));
-        REJECT_RETRY = LangFormat.get(yamlConfiguration.getConfigurationSection("REJECT_RETRY"));
-        ACCEPT_RETRY = LangFormat.get(yamlConfiguration.getConfigurationSection("ACCEPT_RETRY"));
-        WAITING_PLAYER = LangFormat.get(yamlConfiguration.getConfigurationSection("WAITING_PLAYER"));
-        BROADCAST_REMAIN_COUNT = LangFormat.get(yamlConfiguration.getConfigurationSection("BROADCAST_REMAIN_COUNT"));
-        DRAW = LangFormat.get(yamlConfiguration.getConfigurationSection("DRAW"));
-        RESTART = LangFormat.get(yamlConfiguration.getConfigurationSection("RESTART"));
-        AVAILABLE_TO_GET_REWARD = LangFormat.get(yamlConfiguration.getConfigurationSection("AVAILABLE_TO_GET_REWARD"));
-        NEED_TO_EMPTY_SPACE = LangFormat.get(yamlConfiguration.getConfigurationSection("NEED_TO_EMPTY_SPACE"));
-        RANK_FORMAT = LangFormat.get(yamlConfiguration.getConfigurationSection("RANK_FORMAT"));
-        START_GAME = LangFormat.get(yamlConfiguration.getConfigurationSection("START_GAME"));
-        WAITING_STARTING_GAME = LangFormat.get(yamlConfiguration.getConfigurationSection("WAITING_STARTING_GAME"));
-        RESET_GAME = LangFormat.get(yamlConfiguration.getConfigurationSection("RESET_GAME"));
-        WAITING_RESET_GAME = LangFormat.get(yamlConfiguration.getConfigurationSection("WAITING_RESET_GAME"));
-        NON_AVAILABLE_PLACE = LangFormat.get(yamlConfiguration.getConfigurationSection("NON_AVAILABLE_PLACE"));
-        ALREADY_PVP = LangFormat.get(yamlConfiguration.getConfigurationSection("ALREADY_PVP"));
-        ALREADY_INVITING = LangFormat.get(yamlConfiguration.getConfigurationSection("ALREADY_INVITING"));
-        ALREADY_PVP_SELF = LangFormat.get(yamlConfiguration.getConfigurationSection("ALREADY_PVP_SELF"));
-        PLAYER_NOT_FOUND = LangFormat.get(yamlConfiguration.getConfigurationSection("UNFOUNDED_PLAYER"));
-        CANNOT_INVITE_SELF = LangFormat.get(yamlConfiguration.getConfigurationSection("CANNOT_INVITE_SELF"));
+        initLangFormat(yamlConfiguration);
     }
 
     public static void send(Player player, LangFormat langFormat) {
@@ -85,14 +60,14 @@ public class Lang {
             player.sendMessage(filter.apply(text));
         }
         String title = "";
-        if (!langFormat.title.equals("")) {
+        if (!langFormat.title.isEmpty()) {
             title = langFormat.title;
         }
         String subtitle = "";
-        if (!langFormat.subtitle.equals("")) {
+        if (!langFormat.subtitle.isEmpty()) {
             subtitle = langFormat.subtitle;
         }
-        if (!title.equals("") || !subtitle.equals("")) {
+        if (!title.isEmpty() || !subtitle.isEmpty()) {
             player.sendTitle(filter.apply(title), filter.apply(subtitle), 10, 40, 10);
         }
     }
@@ -120,9 +95,9 @@ public class Lang {
     }
 
     public static class LangFormat {
-        private List<String> text;
-        private String title;
-        private String subtitle;
+        private final List<String> text;
+        private final String title;
+        private final String subtitle;
 
         public LangFormat(List<String> text, String title, String subtitle) {
             this.text = text;
@@ -137,5 +112,41 @@ public class Lang {
             return new LangFormat(text, title, subtitle);
         }
 
+    }
+
+    private static void initLangFormat(YamlConfiguration yamlConfiguration) {
+        if (yamlConfiguration == null) return;
+
+        PVP_CANCEL_BY_LOGOUT = getNotNullLangFormat(yamlConfiguration, "PVP_CANCEL_BY_LOGOUT");
+        REJECT_REQUEST_RECEIVER = getNotNullLangFormat(yamlConfiguration, "REJECT_REQUEST_RECEIVER");
+        REJECT_REQUEST_SENDER = getNotNullLangFormat(yamlConfiguration, "REJECT_REQUEST_SENDER");
+        FINISH_WINNER = getNotNullLangFormat(yamlConfiguration, "FINISH_WINNER");
+        FINISH_LOSER = getNotNullLangFormat(yamlConfiguration, "FINISH_LOSER");
+        ACCEPT_INVITATION = getNotNullLangFormat(yamlConfiguration, "ACCEPT_INVITATION");
+        ASK_RETRY = getNotNullLangFormat(yamlConfiguration, "ASK_RETRY");
+        REJECT_RETRY = getNotNullLangFormat(yamlConfiguration, "REJECT_RETRY");
+        ACCEPT_RETRY = getNotNullLangFormat(yamlConfiguration, "ACCEPT_RETRY");
+        WAITING_PLAYER = getNotNullLangFormat(yamlConfiguration, "WAITING_PLAYER");
+        BROADCAST_REMAIN_COUNT = getNotNullLangFormat(yamlConfiguration, "BROADCAST_REMAIN_COUNT");
+        DRAW = getNotNullLangFormat(yamlConfiguration, "DRAW");
+        RESTART = getNotNullLangFormat(yamlConfiguration, "RESTART");
+        AVAILABLE_TO_GET_REWARD = getNotNullLangFormat(yamlConfiguration, "AVAILABLE_TO_GET_REWARD");
+        NEED_TO_EMPTY_SPACE = getNotNullLangFormat(yamlConfiguration, "NEED_TO_EMPTY_SPACE");
+        RANK_FORMAT = getNotNullLangFormat(yamlConfiguration, "RANK_FORMAT");
+        START_GAME = getNotNullLangFormat(yamlConfiguration, "START_GAME");
+        WAITING_STARTING_GAME = getNotNullLangFormat(yamlConfiguration, "WAITING_STARTING_GAME");
+        RESET_GAME = getNotNullLangFormat(yamlConfiguration, "RESET_GAME");
+        WAITING_RESET_GAME = getNotNullLangFormat(yamlConfiguration, "WAITING_RESET_GAME");
+        NON_AVAILABLE_PLACE = getNotNullLangFormat(yamlConfiguration, "NON_AVAILABLE_PLACE");
+        ALREADY_PVP = getNotNullLangFormat(yamlConfiguration, "ALREADY_PVP");
+        ALREADY_INVITING = getNotNullLangFormat(yamlConfiguration, "ALREADY_INVITING");
+        ALREADY_PVP_SELF = getNotNullLangFormat(yamlConfiguration, "ALREADY_PVP_SELF");
+        PLAYER_NOT_FOUND = getNotNullLangFormat(yamlConfiguration, "UNFOUNDED_PLAYER");
+        CANNOT_INVITE_SELF = getNotNullLangFormat(yamlConfiguration, "CANNOT_INVITE_SELF");
+    }
+
+    public static LangFormat getNotNullLangFormat(YamlConfiguration yamlConfiguration,String path) {
+        var section = yamlConfiguration.getConfigurationSection(path);
+        return section == null ? new LangFormat(List.of("해당 언어 포멧을 찾을 수 없습니다. lang.yml 파일을 확인하세요."), "", "") : LangFormat.get(section);
     }
 }
