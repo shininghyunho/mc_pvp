@@ -32,7 +32,7 @@ public class PVPCommand {
     private static final List<String> commands = List.of("신청", "수락", "거절", "다시하기", "그만하기", "랭킹", "보상");
     public static void register() {
         new SimpleCommandBuilder("pvp")
-                .aliases("피브이피")
+                .aliases("피브이피","PVP")
                 .commandExecutor((sender, command, label, args) -> {
                     if(!(sender instanceof Player player)) return false;
 
