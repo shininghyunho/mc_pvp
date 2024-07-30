@@ -228,6 +228,11 @@ public class PVPRegion implements Writable {
         return Optional.ofNullable(bossBarEntity);
     }
 
+    // Team 설정이 되었는지 여부
+    public boolean isTeamSet() {
+        return teamRegionMap.size() == 2;
+    }
+
     // inner class
     public static class TeamRegion {
         public LocationDTO startingLocation;

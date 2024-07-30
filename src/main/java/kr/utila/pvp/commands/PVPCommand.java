@@ -105,7 +105,6 @@ public class PVPCommand {
                             if(!pvpRegion.getGameStatus().equals(GameStatus.MATCH_REPLAY_REQUESTED)) break;
 
                             // 다시하기 요청 수락
-                            // 다시하기 요청 수락
                             Optional<TeamType> teamTypeOptional = pvpRegion.getTeam(player);
                             if (teamTypeOptional.isEmpty()) return false;
                             teamTypeOptional.ifPresent(teamType -> {
@@ -241,6 +240,8 @@ public class PVPCommand {
     }
     private static void readyPvpRegion(Player invitee) {
         PVPRegion pvpRegion = RegionManager.getInstance().getAvailableRegion();
+        if(pvpRegion == null) return;
+
         pvpRegion.regionPlayerUniqueIdMap.clear();
         Player inviter = getInviter(invitee);
         if(inviter == null) return;

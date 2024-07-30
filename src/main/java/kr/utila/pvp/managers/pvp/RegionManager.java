@@ -81,7 +81,7 @@ public class RegionManager extends Manager {
 
     public boolean hasAvailableSpace() {
         return PVP_REGIONS.values().stream()
-                .anyMatch(pvpRegion -> !pvpRegion.getGameStatus().isInGame());
+                .anyMatch(pvpRegion -> pvpRegion.isTeamSet() && !pvpRegion.getGameStatus().isInGame());
     }
 
     public PVPRegion getAvailableRegion() {
