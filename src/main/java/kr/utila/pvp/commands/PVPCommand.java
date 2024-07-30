@@ -59,10 +59,6 @@ public class PVPCommand {
                             Player inviter = player;
                             String inviteeName = args[1];
                             Player invitee = Bukkit.getPlayer(inviteeName);
-                            if(invitee == null) {
-                                player.sendMessage("§c플레이어를 찾을 수 없습니다.");
-                                return false;
-                            }
                             if (!isValidInvite(inviter, invitee)) break;
 
                             // 초대가 성공적이므로 초대 메시지를 보냄
@@ -92,7 +88,7 @@ public class PVPCommand {
                             
                             // 준비된 경기장이 없을 때
                             if (!RegionManager.getInstance().hasAvailableSpace()) {
-                                Lang.send(invitee, Lang.NON_AVAILABLE_PLACE, s -> s);
+                                Lang.send(invitee, Lang.NON_AVAILABLE_PLACE);
                                 break;
                             }
 
@@ -172,24 +168,34 @@ public class PVPCommand {
     }
 
     private static boolean isValidInvite(Player inviter, Player invitee) {
+        // 상대 플레이어가 없을 때
+        if(invitee == null) {
+            Lang.send(inviter, Lang.PLAYER_NOT_FOUND);
+            return false;
+        }
+        // 자기 자신을 초대할 때
+        if(inviter.equals(invitee)) {
+            Lang.send(inviter, Lang.CANNOT_INVITE_SELF);
+            return false;
+        }
         // 준비된 경기장이 없을 때
         if (!RegionManager.getInstance().hasAvailableSpace()) {
-            Lang.send(inviter, Lang.NON_AVAILABLE_PLACE, s -> s);
+            Lang.send(inviter, Lang.NON_AVAILABLE_PLACE);
             return false;
         }
         // 플레이어가 이미 PVP 중일 때
         if (UserManager.getInstance().get(invitee).getPVPName() != null) {
-            Lang.send(inviter, Lang.ALREADY_PVP, s -> s);
+            Lang.send(inviter, Lang.ALREADY_PVP);
             return false;
         }
         // 상대가 이미 초대되었을 때
         if (isInvitee(invitee)) {
-            Lang.send(inviter, Lang.ALREADY_INVITING, s -> s);
+            Lang.send(inviter, Lang.ALREADY_INVITING);
             return false;
         }
         // 플레이어가 이미 초대를 보냈을 때
         if(isInviter(inviter)) {
-            Lang.send(inviter, Lang.ALREADY_PVP_SELF, s -> s);
+            Lang.send(inviter, Lang.ALREADY_PVP_SELF);
             return false;
         }
         return true;

@@ -119,3 +119,14 @@ ALREADY_PVP_SELF:
     - "당신은 이미 PVP중입니다"
   title: ""
   subtitle: ""
+PLAYER_NOT_FOUND:
+  text:
+    - "플레이어를 찾을 수 없습니다"
+  title: ""
+  subtitle: ""
+
+CANNOT_INVITE_SELF:
+  text:
+    - "자기 자신에게는 신청할 수 없습니다"
+  title: ""
+  subtitle: ""

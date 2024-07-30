@@ -1,6 +1,5 @@
 package kr.utila.pvp;
 
-import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.configuration.ConfigurationSection;
@@ -41,6 +40,10 @@ public class Lang {
     public static LangFormat ALREADY_PVP;
     public static LangFormat ALREADY_INVITING;
     public static LangFormat ALREADY_PVP_SELF;
+    // UNFOUNDED_PLAYER
+    public static LangFormat PLAYER_NOT_FOUND;
+    // CANNOT_INVITE_SELF
+    public static LangFormat CANNOT_INVITE_SELF;
 
     public static void load() {
         Main.getInstance().saveResource("lang.yml", false);
@@ -69,6 +72,12 @@ public class Lang {
         ALREADY_PVP = LangFormat.get(yamlConfiguration.getConfigurationSection("ALREADY_PVP"));
         ALREADY_INVITING = LangFormat.get(yamlConfiguration.getConfigurationSection("ALREADY_INVITING"));
         ALREADY_PVP_SELF = LangFormat.get(yamlConfiguration.getConfigurationSection("ALREADY_PVP_SELF"));
+        PLAYER_NOT_FOUND = LangFormat.get(yamlConfiguration.getConfigurationSection("UNFOUNDED_PLAYER"));
+        CANNOT_INVITE_SELF = LangFormat.get(yamlConfiguration.getConfigurationSection("CANNOT_INVITE_SELF"));
+    }
+
+    public static void send(Player player, LangFormat langFormat) {
+        send(player, langFormat, s -> s);
     }
 
     public static void send(Player player, LangFormat langFormat, Function<String, String> filter) {

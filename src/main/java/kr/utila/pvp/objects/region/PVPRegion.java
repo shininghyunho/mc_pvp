@@ -130,10 +130,10 @@ public class PVPRegion implements Writable {
         // 보상 지급
         giveReward(winner, loser);
 
-        Lang.send(winner, Lang.FINISH_WINNER, s -> s);
-        Lang.send(loser, Lang.FINISH_LOSER, s -> s);
-        Lang.send(winner, Lang.ASK_RETRY, s -> s);
-        Lang.send(loser, Lang.ASK_RETRY, s -> s);
+        Lang.send(winner, Lang.FINISH_WINNER);
+        Lang.send(loser, Lang.FINISH_LOSER);
+        Lang.send(winner, Lang.ASK_RETRY);
+        Lang.send(loser, Lang.ASK_RETRY);
     }
     private void askRestartWhenDraw() {
         prepareMatchReplayRequest();
@@ -142,8 +142,8 @@ public class PVPRegion implements Writable {
             Player player = Bukkit.getPlayer(UUID.fromString(uuid));
             teleportToStartingLocation(player);
 
-            Lang.send(player, Lang.DRAW, s -> s);
-            Lang.send(player, Lang.ASK_RETRY, s -> s);
+            Lang.send(player, Lang.DRAW);
+            Lang.send(player, Lang.ASK_RETRY);
         });
     }
     public void cancelByLogout(OfflinePlayer offlinePlayer) {
@@ -260,7 +260,7 @@ public class PVPRegion implements Writable {
                 if(gameStatus.equals(GameStatus.PAUSED)) return;
 
                 if (second-- <= 0) {
-                    players.forEach(player -> Lang.send(player, Lang.RESET_GAME, s -> s));
+                    players.forEach(player -> Lang.send(player, Lang.RESET_GAME));
                     // 경기 대기
                     waitMatch(players);
                     cancel();
@@ -281,7 +281,7 @@ public class PVPRegion implements Writable {
                 if(gameStatus.equals(GameStatus.PAUSED)) return;
 
                 if (second-- <= 0) {
-                    players.forEach(player -> Lang.send(player, Lang.START_GAME, s -> s));
+                    players.forEach(player -> Lang.send(player, Lang.START_GAME));
                     startMatch();
                     cancel();
                 }
@@ -325,7 +325,7 @@ public class PVPRegion implements Writable {
         loseUser.setStraight(0);
         // 보상 지급을 할 수 있으면 보상 지급
         if (!RewardManager.getInstance().get(winUser.getStraight()).isEmpty() && !winUser.getAcquiredRewards().contains(winUser.getStraight())) {
-            Lang.send(winPlayer, Lang.AVAILABLE_TO_GET_REWARD, s -> s);
+            Lang.send(winPlayer, Lang.AVAILABLE_TO_GET_REWARD);
         }
     }
     /**
