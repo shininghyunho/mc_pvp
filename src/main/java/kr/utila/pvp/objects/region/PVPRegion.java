@@ -38,7 +38,7 @@ public class PVPRegion implements Writable {
     private GameStatus gameStatus;
     public Map<TeamType, Boolean> isAcceptedMap;
     public int remainSecond;
-    private List<String> commands;
+    private final List<String> commands;
     public BossBarEntity bossBarEntity;
     private GameStatus priorGameStatus;
 
@@ -202,7 +202,7 @@ public class PVPRegion implements Writable {
             yamlConfiguration.set("remainSecond", remainSecond);
         }
         // commands
-        if(!yamlConfiguration.contains(COMMANDS)) yamlConfiguration.set(COMMANDS, new ArrayList<>(List.of("명령어1","명령어2")));
+        if(!yamlConfiguration.contains(COMMANDS)) yamlConfiguration.set(COMMANDS, new ArrayList<>(List.of("tellraw @p \"경기장 초기화 예시\"")));
         // gameStatus
         if(!yamlConfiguration.contains(GAME_STATUS)) yamlConfiguration.set(GAME_STATUS, DEFAULT_GAME_STATUS);
 
