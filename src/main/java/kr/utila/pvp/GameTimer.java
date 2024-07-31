@@ -29,7 +29,7 @@ public class GameTimer {
                                             // 팀별로 남은 시간 알림
                                             Lang.send(player, Lang.BROADCAST_REMAIN_COUNT, s -> s.replaceAll("%second%", pvpRegion.remainSecond + ""));
                                             // boss bar 업데이트
-                                            pvpRegion.getBossBarEntity().ifPresent(bossBarEntity -> bossBarEntity.update(pvpRegion.remainSecond,Config.GAME_TIME));
+                                            pvpRegion.getBossBarEntity().ifPresent(bossBarEntity -> bossBarEntity.update(pvpRegion.remainSecond,Config.MATCH_SECOND));
                                         });
                             }
                         });

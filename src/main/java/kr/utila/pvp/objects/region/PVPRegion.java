@@ -258,7 +258,7 @@ public class PVPRegion implements Writable {
         initializeMatchTimer(players);
     }
     private void initializeMatchTimer(@NotNull List<Player> players) {
-        second = Config.GAME_RESET_TIME;
+        second = Config.MATCH_RESET_SECOND;
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -279,7 +279,7 @@ public class PVPRegion implements Writable {
         waitMatchTimer(players);
     }
     private void waitMatchTimer(@NotNull List<Player> players) {
-        second = Config.START_COOLTIME;
+        second = Config.MATCH_WAIT_SECOND;
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -301,7 +301,7 @@ public class PVPRegion implements Writable {
      */
     private void waitPlayerTimer(Player waitPlayer, Player quitPlayer) {
         // 나간 플레이어가 다시 접속할 때까지 대기
-        second = Config.WAITING_PLAYER_SECOND;
+        second = Config.WAITING_FOR_LEFT_USER_SECOND;
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -412,7 +412,7 @@ public class PVPRegion implements Writable {
      * 경기 시작
      */
     private void startMatch() {
-        remainSecond = Config.GAME_TIME;
+        remainSecond = Config.MATCH_SECOND;
         gameStatus = GameStatus.MATCH_IN_PROGRESS;
         setBossBarEntity();
     }

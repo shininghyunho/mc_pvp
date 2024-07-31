@@ -4,17 +4,21 @@ public class Config {
 
     private static final Main PLUGIN = Main.getInstance();
 
-    public static int START_COOLTIME;
-    public static int WAITING_PLAYER_SECOND;
-    public static int GAME_TIME;
-    public static int GAME_RESET_TIME;
+    // 경기 초기화 시간
+    public static int MATCH_RESET_SECOND;
+    // 경기 대기 시간
+    public static int MATCH_WAIT_SECOND;
+    // 경기 시간
+    public static int MATCH_SECOND;
+    // 탈주 유저 대기 시간
+    public static int WAITING_FOR_LEFT_USER_SECOND;
 
     public static void load() {
         PLUGIN.saveDefaultConfig();
         PLUGIN.reloadConfig();
-        START_COOLTIME = PLUGIN.getConfig().getInt("START_COOLTIME");
-        WAITING_PLAYER_SECOND = PLUGIN.getConfig().getInt("WAITING_PLAYER_SECOND");
-        GAME_TIME = PLUGIN.getConfig().getInt("GAME_TIME");
-        GAME_RESET_TIME = PLUGIN.getConfig().getInt("GAME_RESET_TIME");
+        MATCH_WAIT_SECOND = PLUGIN.getConfig().getInt("MATCH_WAIT_SECOND");
+        WAITING_FOR_LEFT_USER_SECOND = PLUGIN.getConfig().getInt("WAITING_FOR_LEFT_USER_SECOND");
+        MATCH_SECOND = PLUGIN.getConfig().getInt("MATCH_SECOND");
+        MATCH_RESET_SECOND = PLUGIN.getConfig().getInt("MATCH_RESET_SECOND");
     }
 }
