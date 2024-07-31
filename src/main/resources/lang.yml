@@ -25,13 +25,18 @@ FINISH_LOSER:
   subtitle: ""
 ACCEPT_INVITATION:
   text:
-    - "§l%accept% §r를 클릭하여 PVP 신청을 수락 하세요"
-    - "§l%refuse_i% §r를 클릭하여 PVP 신청을 거절 하세요"
+    - "%player%님이 PVP 신청을 수락했습니다."
+    - "아래의 버튼을 클릭하여 PVP 를 시작하세요"
+    - "§l%ACCEPT_YES% §r"
+    - "§l%ACCEPT_NO% §r"
   title: ""
   subtitle: ""
-ASK_RETRY:
+ASK_REPLAY:
   text:
     - "다시 하시겠습니까?"
+    - "아래의 버튼을 클릭하여 다시 시작하세요"
+    - "§l%REPLAY_YES% §r"
+    - "§l%REPLAY_NO% §r"
   title: ""
   subtitle: ""
 REJECT_RETRY:

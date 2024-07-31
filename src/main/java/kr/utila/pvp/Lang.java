@@ -20,7 +20,7 @@ public class Lang {
     public static LangFormat FINISH_WINNER;
     public static LangFormat FINISH_LOSER;
     public static LangFormat ACCEPT_INVITATION;
-    public static LangFormat ASK_RETRY;
+    public static LangFormat ASK_REPLAY;
     public static LangFormat REJECT_RETRY;
     public static LangFormat ACCEPT_RETRY;
     public static LangFormat WAITING_PLAYER;
@@ -73,24 +73,21 @@ public class Lang {
     }
 
     public static void sendClickableCommand(Player player, LangFormat langFormat) {
-        for (String message : langFormat.text) {
-            TextComponent component;
-            if (message.contains("%accept%")) {
-                component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll("%accept%", "여기")));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/PVP 수락"));
-            } else if (message.contains("%refuse_i%")) {
-                component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll("%refuse_i%", "여기")));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/PVP 거절"));
-            } else if (message.contains("%regame%")) {
-                component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll("%regame%", "여기")));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/PVP 다시하기"));
-            } else if (message.contains("%refuse%")) {
-                component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll("%refuse%", "여기")));
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/PVP 그만하기"));
-            } else {
-                component = new TextComponent(TextComponent.fromLegacyText(message));
+        for(String message : langFormat.text) {
+            for(String clickable : Config.ClickableValue.buttonNameMap.keySet()) {
+                // 메시지에 clickable 이 포함되어 있다면
+                if(message.contains(clickable)) {
+                    var buttonName = Config.ClickableValue.buttonNameMap.get(clickable);
+                    var clickablePath = "%" + clickable + "%";
+                    // 메시지에 clickable 을 버튼 이름으로 바꿈
+                    var component = new TextComponent(TextComponent.fromLegacyText(message.replaceAll(clickablePath,buttonName == null ? "버튼" : buttonName)));
+                    // 클릭 이벤트로 설정
+                    component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, Config.ClickableValue.commandMap.get(clickable)));
+                    // 메시지 전송
+                    player.spigot().sendMessage(component);
+                    break;
+                }
             }
-            player.spigot().sendMessage(component);
         }
     }
 
@@ -123,7 +120,7 @@ public class Lang {
         FINISH_WINNER = getNotNullLangFormat(yamlConfiguration, "FINISH_WINNER");
         FINISH_LOSER = getNotNullLangFormat(yamlConfiguration, "FINISH_LOSER");
         ACCEPT_INVITATION = getNotNullLangFormat(yamlConfiguration, "ACCEPT_INVITATION");
-        ASK_RETRY = getNotNullLangFormat(yamlConfiguration, "ASK_RETRY");
+        ASK_REPLAY = getNotNullLangFormat(yamlConfiguration, "ASK_REPLAY");
         REJECT_RETRY = getNotNullLangFormat(yamlConfiguration, "REJECT_RETRY");
         ACCEPT_RETRY = getNotNullLangFormat(yamlConfiguration, "ACCEPT_RETRY");
         WAITING_PLAYER = getNotNullLangFormat(yamlConfiguration, "WAITING_PLAYER");

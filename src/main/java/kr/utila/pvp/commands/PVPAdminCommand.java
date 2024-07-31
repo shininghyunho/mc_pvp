@@ -133,8 +133,8 @@ public class PVPAdminCommand {
                                     manager.saveAll();
                                     manager.load();
                                     RewardManager.getInstance().load();
-                                    Lang.load();
                                     Config.load();
+                                    Lang.load();
                                     player.sendMessage("§a리로드 완료");
                                 } catch (Exception e) {
                                     e.printStackTrace();

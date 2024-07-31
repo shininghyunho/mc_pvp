@@ -1,5 +1,11 @@
 package kr.utila.pvp;
 
+import org.bukkit.configuration.file.FileConfiguration;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 public class Config {
     private static final Main PLUGIN = Main.getInstance();
     /**
@@ -22,9 +28,34 @@ public class Config {
     public static void load() {
         PLUGIN.saveDefaultConfig();
         PLUGIN.reloadConfig();
-        MATCH_INITIALIZED_SECOND = PLUGIN.getConfig().getInt("MATCH_INITIALIZED_SECOND");
-        MATCH_WAITING_SECOND = PLUGIN.getConfig().getInt("MATCH_WAITING_SECOND");
-        MATCH_SECOND = PLUGIN.getConfig().getInt("MATCH_SECOND");
-        WAITING_FOR_LEFT_USER_SECOND = PLUGIN.getConfig().getInt("WAITING_FOR_LEFT_USER_SECOND");
+        var config = PLUGIN.getConfig();
+        loadValues(config);
+        ClickableValue.load(config);
+    }
+
+    private static void loadValues(FileConfiguration config) {
+        MATCH_INITIALIZED_SECOND = getNonNullValue(config, "MATCH_INITIALIZED_SECOND", 5);
+        MATCH_WAITING_SECOND = getNonNullValue(config, "MATCH_WAITING_SECOND", 5);
+        MATCH_SECOND = getNonNullValue(config, "MATCH_SECOND", 60);
+        WAITING_FOR_LEFT_USER_SECOND = getNonNullValue(config, "WAITING_FOR_LEFT_USER_SECOND", 15);
+    }
+
+    public static class ClickableValue {
+        public static final Map<String,String> buttonNameMap = new HashMap<>();
+        public static final Map<String,String> commandMap = new HashMap<>() {{
+           put("ACCEPT_YES","/pvp 수락");
+           put("ACCEPT_NO","/pvp 거절");
+           put("REPLAY_YES","/pvp 다시하기");
+           put("REPLAY_NO","/pvp 그만하기");
+        }};
+
+        private static void load(FileConfiguration config) {
+            Optional.ofNullable(config.getConfigurationSection("clickable"))
+                    .ifPresent(clickable -> clickable.getKeys(false).forEach(key -> buttonNameMap.put(key, clickable.getString(key))));
+        }
+    }
+
+    private static int getNonNullValue(FileConfiguration config, String path, int defaultValue) {
+        return config.contains(path) ? config.getInt(path) : defaultValue;
     }
 }

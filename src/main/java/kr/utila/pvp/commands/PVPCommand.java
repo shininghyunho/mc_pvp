@@ -114,6 +114,7 @@ public class PVPCommand {
                             for (boolean isAccepted : pvpRegion.isAcceptedMap.values()) if (!isAccepted) return false;
 
                             // 다시하기 진행
+                            Lang.sendClickableCommand(player, Lang.ASK_REPLAY);
                             Lang.send(player, Lang.ACCEPT_RETRY, s -> s.replaceAll("%player%", player.getName()));
                             pvpRegion.restart();
                         }
