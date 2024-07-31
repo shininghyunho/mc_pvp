@@ -258,7 +258,7 @@ public class PVPRegion implements Writable {
         initializeMatchTimer(players);
     }
     private void initializeMatchTimer(@NotNull List<Player> players) {
-        second = Config.MATCH_RESET_SECOND;
+        second = Config.MATCH_INITIALIZED_SECOND;
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -279,7 +279,7 @@ public class PVPRegion implements Writable {
         waitMatchTimer(players);
     }
     private void waitMatchTimer(@NotNull List<Player> players) {
-        second = Config.MATCH_WAIT_SECOND;
+        second = Config.MATCH_WAITING_SECOND;
         new BukkitRunnable() {
             @Override
             public void run() {

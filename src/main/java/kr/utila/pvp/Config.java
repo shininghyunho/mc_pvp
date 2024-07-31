@@ -5,11 +5,11 @@ public class Config {
     /**
      * 경기 리셋 시간
      */
-    public static int MATCH_RESET_SECOND;
+    public static int MATCH_INITIALIZED_SECOND;
     /**
      * 경기 시작 대기 시간
      */
-    public static int MATCH_WAIT_SECOND;
+    public static int MATCH_WAITING_SECOND;
     /**
      * 경기 시간
      */
@@ -22,8 +22,8 @@ public class Config {
     public static void load() {
         PLUGIN.saveDefaultConfig();
         PLUGIN.reloadConfig();
-        MATCH_RESET_SECOND = PLUGIN.getConfig().getInt("MATCH_RESET_SECOND");
-        MATCH_WAIT_SECOND = PLUGIN.getConfig().getInt("MATCH_WAIT_SECOND");
+        MATCH_INITIALIZED_SECOND = PLUGIN.getConfig().getInt("MATCH_INITIALIZED_SECOND");
+        MATCH_WAITING_SECOND = PLUGIN.getConfig().getInt("MATCH_WAITING_SECOND");
         MATCH_SECOND = PLUGIN.getConfig().getInt("MATCH_SECOND");
         WAITING_FOR_LEFT_USER_SECOND = PLUGIN.getConfig().getInt("WAITING_FOR_LEFT_USER_SECOND");
     }
