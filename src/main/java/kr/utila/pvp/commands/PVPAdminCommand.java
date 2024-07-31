@@ -24,7 +24,7 @@ public class PVPAdminCommand {
 
     public static Map<String, LocationDTO[]> posSettingData = new HashMap<>();
 
-    private static RegionManager manager = RegionManager.getInstance();
+    private static final RegionManager manager = RegionManager.getInstance();
 
     public static void register() {
         new SimpleCommandBuilder("admin-pvp")
@@ -45,59 +45,27 @@ public class PVPAdminCommand {
                         }
                         switch (args[0]) {
                             case "경기장생성" -> {
-                                if (!posSettingData.containsKey(player.getUniqueId().toString())) {
-                                    player.sendMessage("§cpos1과 pos2를 설정 후 입력해주세요");
-                                    return false;
-                                }
-                                LocationDTO[] pos = posSettingData.get(player.getUniqueId().toString());
-                                if (pos[0] == null || pos[1] == null) {
-                                    player.sendMessage("§cpos1과 pos2를 설정 후 입력해주세요");
-                                    return false;
-                                }
-                                if (args.length == 1) {
-                                    player.sendMessage("§c경기장 이름을 입력해주세요");
-                                    return false;
-                                }
-                                if (manager.exists(args[1])) {
-                                    player.sendMessage("§c이미 존재하는 경기장입니다");
-                                    return false;
-                                }
-                                manager.create(args[1], pos[0], pos[1]);
-                                posSettingData.remove(player.getUniqueId().toString());
+                                var regionName = args[1];
+                                var pos = posSettingData.get(player.getUniqueId().toString());
+                                if (!isValidRegionCreate(args, player,pos)) return false;
+
+                                // 경기장 생성
+                                manager.create(regionName, pos[0], pos[1]);
                                 player.sendMessage("§a생성 완료");
+                                posSettingData.remove(player.getUniqueId().toString());
                                 return false;
                             }
                             case "진영설정" -> {
-                                if (args.length == 1) {
-                                    player.sendMessage("§c경기장 이름을 입력해주세요");
-                                    return false;
-                                }
-                                if (args.length == 2) {
-                                    player.sendMessage("§c팀 이름을 입력해주세요");
-                                    return false;
-                                }
-                                if (!manager.exists(args[1])) {
-                                    player.sendMessage("§c존재하지 않는 경기장입니다");
-                                    return false;
-                                }
-                                LocationDTO startingLocation = LocationDTO.toLocationDTO(player.getLocation());
-                                manager.setTeamLocation(args[1], TeamType.getTeam(args[2]), startingLocation);
+                                if (!isValidRegion(args, player)) return false;
+                                var startingLocation = LocationDTO.toLocationDTO(player.getLocation());
+                                var regionName = args[1];
+                                var team = TeamType.getTeam(args[2]);
+                                manager.setTeamLocation(regionName, team, startingLocation);
                                 player.sendMessage("§a설정 완료");
                                 return false;
                             }
                             case "아이템설정" -> {
-                                if (args.length == 1) {
-                                    player.sendMessage("§c경기장 이름을 입력해주세요");
-                                    return false;
-                                }
-                                if (args.length == 2) {
-                                    player.sendMessage("§c팀 이름을 입력해주세요");
-                                    return false;
-                                }
-                                if (!manager.exists(args[1])) {
-                                    player.sendMessage("§c존재하지 않는 경기장입니다");
-                                    return false;
-                                }
+                                if (!isValidRegion(args, player)) return false;
                                 ItemSettingGUI.open(player, args[1], TeamType.getTeam(args[2]));
                                 return false;
                             }
@@ -164,6 +132,43 @@ public class PVPAdminCommand {
                     return null;
                 })
                 .register();
+    }
+
+    private static boolean isValidRegion(String[] args, Player player) {
+        if (args.length == 1) {
+            player.sendMessage("§c경기장 이름을 입력해주세요");
+            return false;
+        }
+        if (args.length == 2) {
+            player.sendMessage("§c팀 이름을 입력해주세요");
+            return false;
+        }
+        if (!manager.exists(args[1])) {
+            player.sendMessage("§c존재하지 않는 경기장입니다");
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean isValidRegionCreate(String[] args, Player player,LocationDTO[] pos) {
+        if (!posSettingData.containsKey(player.getUniqueId().toString())) {
+            player.sendMessage("§cpos1과 pos2를 설정 후 입력해주세요");
+            return false;
+        }
+        if (pos[0] == null || pos[1] == null) {
+            player.sendMessage("§cpos1과 pos2를 설정 후 입력해주세요");
+            return false;
+        }
+        if (args.length == 1) {
+            player.sendMessage("§c경기장 이름을 입력해주세요");
+            return false;
+        }
+        var regionName = args[1];
+        if (manager.exists(regionName)) {
+            player.sendMessage("§c이미 존재하는 경기장입니다");
+            return false;
+        }
+        return true;
     }
 
 }

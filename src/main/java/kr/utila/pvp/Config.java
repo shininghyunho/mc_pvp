@@ -50,7 +50,7 @@ public class Config {
         }};
 
         private static void load(FileConfiguration config) {
-            Optional.ofNullable(config.getConfigurationSection("clickable"))
+            Optional.ofNullable(config.getConfigurationSection("CLICK_MESSAGE"))
                     .ifPresent(clickable -> clickable.getKeys(false).forEach(key -> buttonNameMap.put(key, clickable.getString(key))));
         }
     }

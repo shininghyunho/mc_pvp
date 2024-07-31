@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.function.Function;
 
 public class Lang {
-
     private static final File FILE = new File(Main.getInstance().getDataFolder(), "lang.yml");
 
     public static LangFormat PVP_CANCEL_BY_LOGOUT;
