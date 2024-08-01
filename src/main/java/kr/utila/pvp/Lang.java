@@ -45,7 +45,7 @@ public class Lang {
     public static LangFormat CANNOT_INVITE_SELF;
 
     public static void load() {
-        Main.getInstance().saveResource("lang.yml", false);
+        Main.getInstance().saveResource("lang.yml", true);
         YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(FILE);
         initLangFormat(yamlConfiguration);
     }

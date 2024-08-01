@@ -62,9 +62,7 @@ public class PVPCommand {
                             // 초대가 성공적이므로 초대 메시지를 보냄
                             sendInviteMessage(args, invitee);
 
-                            // 초대 데이터 저장
                             invite(inviter, invitee);
-
                             expireInviteTimer(inviter,invitee);
                         }
                         case "거절" -> {
@@ -92,6 +90,14 @@ public class PVPCommand {
                             
                             // 준비된 경기장이 없을 때
                             if (!RegionManager.getInstance().hasAvailableSpace()) {
+                                // TEST
+                                // 모든 경기장 정보 출력
+                                RegionManager.getInstance().getAllRegions().forEach((region) -> {
+                                    // name print
+                                    logger.info("name : "+region.getName());
+                                    // gameStatus print
+                                    logger.info("gameStatus : "+region.getGameStatus());
+                                });
                                 Lang.send(invitee, Lang.NON_AVAILABLE_PLACE);
                                 break;
                             }
@@ -191,15 +197,16 @@ public class PVPCommand {
             Lang.send(inviter, Lang.ALREADY_PVP_SELF);
             return false;
         }
+        // 초대가 불가능 할 때
+        if(!canInvite(inviter,invitee)) {
+            Lang.send(inviter, Lang.ALREADY_INVITING);
+            return false;
+        }
         return true;
     }
 
     private static void invite(Player inviter,Player invitee) {
-        if(!canInvite(inviter,invitee)) {
-            inviter.sendMessage("§c이미 초대한 플레이어입니다.");
-            invitee.sendMessage("§c이미 초대받은 플레이어입니다.");
-            return;
-        }
+        if(!canInvite(inviter,invitee)) return;
 
         var inviterId = inviter.getUniqueId();
         var inviteeId = invitee.getUniqueId();
@@ -210,6 +217,7 @@ public class PVPCommand {
 
     // can invite invitee
     private static boolean canInvite(Player inviter,Player invitee) {
+        if(inviter == null || invitee == null) return false;
         return !inviterMap.containsKey(invitee.getUniqueId()) && !inviteeMap.containsKey(inviter.getUniqueId());
     }
     // is inviter

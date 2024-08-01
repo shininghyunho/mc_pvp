@@ -182,7 +182,7 @@ public class PVPRegion implements Writable {
     @Override
     public void write() {
         // TEST
-        logger.info("write() 호출");
+        logger.info("Region write :"+name);
 
         if(name == null) return;
         final File PATH = new File(DIRECTORY, name + ".yml");
@@ -251,6 +251,11 @@ public class PVPRegion implements Writable {
     // Team 설정이 되었는지 여부
     public boolean isTeamSet() {
         return teamRegionMap.size() == 2;
+    }
+
+    // get name
+    public String getName() {
+        return name;
     }
 
     // inner class

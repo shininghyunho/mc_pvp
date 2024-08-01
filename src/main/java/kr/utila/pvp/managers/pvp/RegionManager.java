@@ -114,7 +114,7 @@ public class RegionManager extends Manager {
 
         PVP_REGIONS.clear();
 
-        if(!DIRECTORY.mkdir()) return;
+        if(DIRECTORY.mkdir()) return;
         Optional.ofNullable(DIRECTORY.listFiles()).ifPresent(files -> {
             Arrays.stream(files).forEach(file -> {
                 var yaml = YamlConfiguration.loadConfiguration(file);
