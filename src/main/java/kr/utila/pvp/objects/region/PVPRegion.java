@@ -110,8 +110,8 @@ public class PVPRegion implements Writable {
             return;
         }
 
-        // boss bar 중지
-        bossBarEntity.stop();
+        // boss bar 삭제
+        bossBarEntity.clear();
 
         double player1Health = player1.getHealth();
         double player2Health = player2.getHealth();

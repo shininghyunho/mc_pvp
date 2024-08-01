@@ -46,4 +46,9 @@ public class BossBarEntity {
     private void setTitle(String title) {
         bossBar.setTitle(title);
     }
+
+    // clear
+    public void clear() {
+        bossBar.removeAll();
+    }
 }
