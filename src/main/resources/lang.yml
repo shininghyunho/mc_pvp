@@ -31,6 +31,11 @@ ACCEPT_INVITATION:
     - "§l%ACCEPT_NO% §r"
   title: ""
   subtitle: ""
+SEND_INVITATION:
+  text:
+    - "%player%님에게 PVP 신청을 보냈습니다"
+  title: ""
+  subtitle: ""
 ASK_REPLAY:
   text:
     - "다시 하시겠습니까?"

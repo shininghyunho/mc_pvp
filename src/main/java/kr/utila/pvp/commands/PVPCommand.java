@@ -66,6 +66,8 @@ public class PVPCommand {
 
                             // 초대가 성공적이므로 초대 메시지를 보냄
                             sendInviteMessage(args, invitee);
+                            // 자기 자신에게 안내 메시지를 보냄
+                            Lang.send(inviter, Lang.SEND_INVITATION, s -> s.replaceAll("%player%", inviteeName));
 
                             invite(inviter, invitee);
                             setExpireInviteTimer(inviter,invitee);
@@ -163,11 +165,9 @@ public class PVPCommand {
     }
 
     private static void sendInviteMessage(String[] args, Player invitee) {
+        Lang.sendClickableCommand(invitee, Lang.ACCEPT_INVITATION);
         StringBuilder message = new StringBuilder();
         for (int i = 2; i < args.length; i++) message.append(args[i]).append(" ");
-        invitee.sendMessage(message.toString());
-        invitee.sendTitle(message.toString(), "", 10, 40, 10);
-        Lang.sendClickableCommand(invitee, Lang.ACCEPT_INVITATION);
         invitee.sendMessage("§7[보낸요청] " + message);
     }
 

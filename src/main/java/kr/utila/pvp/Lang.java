@@ -43,6 +43,8 @@ public class Lang {
     public static LangFormat PLAYER_NOT_FOUND;
     // CANNOT_INVITE_SELF
     public static LangFormat CANNOT_INVITE_SELF;
+    // SEND_INVITATION
+    public static LangFormat SEND_INVITATION;
 
     public static void load() {
         Main.getInstance().saveResource("lang.yml", true);
@@ -139,6 +141,7 @@ public class Lang {
         ALREADY_PVP_SELF = getNotNullLangFormat(yamlConfiguration, "ALREADY_PVP_SELF");
         PLAYER_NOT_FOUND = getNotNullLangFormat(yamlConfiguration, "UNFOUNDED_PLAYER");
         CANNOT_INVITE_SELF = getNotNullLangFormat(yamlConfiguration, "CANNOT_INVITE_SELF");
+        SEND_INVITATION = getNotNullLangFormat(yamlConfiguration, "SEND_INVITATION");
     }
 
     public static LangFormat getNotNullLangFormat(YamlConfiguration yamlConfiguration,String path) {
