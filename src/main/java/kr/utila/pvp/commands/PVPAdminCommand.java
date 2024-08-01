@@ -103,6 +103,7 @@ public class PVPAdminCommand {
                                     RewardManager.getInstance().load();
                                     Config.load();
                                     Lang.load();
+                                    PVPCommand.clearInvite();
                                     player.sendMessage("§a리로드 완료");
                                 } catch (Exception e) {
                                     e.printStackTrace();

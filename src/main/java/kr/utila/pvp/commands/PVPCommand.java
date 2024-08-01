@@ -15,16 +15,19 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 public class PVPCommand {
+    // logger
+    private static final Logger logger = Logger.getLogger(PVPCommand.class.getName());
     /**
      * <초대받은 플레이어, 초대한 플레이어> 매핑
      */
-    public static Map<String, String> inviterMap = new HashMap<>();
+    public static Map<UUID, UUID> inviterMap = new HashMap<>();
     /**
      * <초대한 플레이어, 초대받은 플레이어> 매핑
      */
-    public static Map<String, String> inviteeMap = new HashMap<>();
+    public static Map<UUID, UUID> inviteeMap = new HashMap<>();
 
     // PVP 자동 삭제 시간
     public static final int PVP_EXPIRE_TIME = 20;
@@ -47,11 +50,6 @@ public class PVPCommand {
                         player.sendMessage("/PVP 보상");
                         return false;
                     }
-                    // validate command
-                    if(args.length < 2) {
-                        player.sendMessage("§c플레이어를 입력하세요.");
-                        return false;
-                    }
 
                     String op = args[0];
                     switch (op) {
@@ -72,7 +70,10 @@ public class PVPCommand {
                         case "거절" -> {
                             Player invitee = player;
                             // 초대 된 적이 없다면 break
-                            if(!isInvitee(invitee)) break;
+                            if(!isInvitee(invitee)) {
+                                invitee.sendMessage("§c초대받지 않은 플레이어입니다.");
+                                break;
+                            }
 
                             Player inviter = getInviter(invitee);
                             if(inviter == null) break;
@@ -84,7 +85,10 @@ public class PVPCommand {
                         case "수락" -> {
                             Player invitee = player;
                             // 초대된 플레이어 목록에서 없다면 break
-                            if(!isInvitee(invitee)) break;
+                            if(!isInvitee(invitee)) {
+                                invitee.sendMessage("§c초대받지 않은 플레이어입니다.");
+                                break;
+                            }
                             
                             // 준비된 경기장이 없을 때
                             if (!RegionManager.getInstance().hasAvailableSpace()) {
@@ -202,37 +206,47 @@ public class PVPCommand {
     }
 
     private static void invite(Player inviter,Player invitee) {
-        if(!canInvite(inviter,invitee)) return;
-        inviterMap.put(invitee.getUniqueId().toString(),inviter.getUniqueId().toString());
-        inviteeMap.put(inviter.getUniqueId().toString(),invitee.getUniqueId().toString());
+        if(!canInvite(inviter,invitee)) {
+            inviter.sendMessage("§c이미 초대한 플레이어입니다.");
+            invitee.sendMessage("§c이미 초대받은 플레이어입니다.");
+            return;
+        }
+
+        var inviterId = inviter.getUniqueId();
+        var inviteeId = invitee.getUniqueId();
+        logger.info("inviterId : "+inviterId+" inviteeId : "+inviteeId);
+        inviterMap.put(inviteeId, inviterId);
+        inviteeMap.put(inviterId, inviteeId);
     }
 
     // can invite invitee
     private static boolean canInvite(Player inviter,Player invitee) {
-        return !inviterMap.containsKey(invitee.getUniqueId().toString()) && !inviteeMap.containsKey(inviter.getUniqueId().toString());
+        return !inviterMap.containsKey(invitee.getUniqueId()) && !inviteeMap.containsKey(inviter.getUniqueId());
     }
     // is inviter
     private static boolean isInviter(Player player) {
-        return inviteeMap.containsKey(player.getUniqueId().toString());
+        return inviteeMap.containsKey(player.getUniqueId());
     }
     // is invitee
     private static boolean isInvitee(Player player) {
-        return inviterMap.containsKey(player.getUniqueId().toString());
+        return inviterMap.containsKey(player.getUniqueId());
     }
     // get inviter
     private static Player getInviter(Player invitee) {
         if(!isInvitee(invitee)) return null;
-        return Bukkit.getPlayer(UUID.fromString(inviterMap.get(invitee.getUniqueId().toString())));
+        return Bukkit.getPlayer(inviterMap.get(invitee.getUniqueId()));
     }
     // delete invitee
     private static void deleteInvitee(Player invitee) {
+        logger.info("deleteInvitee : "+invitee.getUniqueId());
         if(!isInvitee(invitee)) return;
-        inviterMap.remove(invitee.getUniqueId().toString());
+        inviterMap.remove(invitee.getUniqueId());
     }
     // delete inviter
     private static void deleteInviter(Player inviter) {
+        logger.info("deleteInviter : "+inviter.getUniqueId());
         if(!isInviter(inviter)) return;
-        inviteeMap.remove(inviter.getUniqueId().toString());
+        inviteeMap.remove(inviter.getUniqueId());
     }
     // delete invite
     private static void deleteInvite(Player inviter,Player invitee) {
@@ -267,8 +281,16 @@ public class PVPCommand {
                 if(!isInGame(inviter)) {
                     deleteInvite(inviter, invitee);
                     // TODO : 초대가 만료되었음을 알리는 메시지
+                    inviter.sendMessage("§c초대가 만료되었습니다.");
+                    invitee.sendMessage("§c초대가 만료되었습니다.");
                 }
             }
-        }.runTaskLater(Main.getInstance(), PVP_EXPIRE_TIME);
+        }.runTaskLater(Main.getInstance(), PVP_EXPIRE_TIME * 20);
+    }
+    // clear invite
+    public static void clearInvite() {
+        logger.info("clear invite info");
+        inviterMap.clear();
+        inviteeMap.clear();
     }
 }
