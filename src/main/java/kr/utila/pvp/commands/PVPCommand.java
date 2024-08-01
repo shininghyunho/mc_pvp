@@ -110,10 +110,6 @@ public class PVPCommand {
 
                             // 다시하기 요청 수락
                             pvpRegion.replayAccept(player);
-
-                            // 다시하기 진행
-                            Lang.send(player, Lang.ACCEPT_RETRY, s -> s.replaceAll("%player%", player.getName()));
-                            pvpRegion.restart();
                         }
                         case "그만하기" -> {
                             // 경기 중이 아니면 종료
