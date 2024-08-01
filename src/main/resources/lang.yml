@@ -144,3 +144,8 @@ CANNOT_INVITE_SELF:
     - "자기 자신에게는 신청할 수 없습니다"
   title: ""
   subtitle: ""
+GAME_TERMINATED:
+  text:
+    - "게임이 종료되었습니다"
+  title: ""
+  subtitle: ""

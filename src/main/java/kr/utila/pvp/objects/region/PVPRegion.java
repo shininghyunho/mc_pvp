@@ -191,7 +191,10 @@ public class PVPRegion implements Writable {
         regionPlayerUniqueIdMap.values().forEach(uuid -> {
             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
             // 온라인 플레이어면 quit()
-            if(offlinePlayer.getPlayer() != null) UserManager.getInstance().get(offlinePlayer.getPlayer()).quit();
+            if(offlinePlayer.getPlayer() != null) {
+                UserManager.getInstance().get(offlinePlayer.getPlayer()).quit();
+                Lang.send(offlinePlayer.getPlayer(), Lang.GAME_TERMINATED);
+            }
         });
     }
     @Override
