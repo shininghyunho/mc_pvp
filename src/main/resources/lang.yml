@@ -129,7 +129,6 @@ PLAYER_NOT_FOUND:
     - "플레이어를 찾을 수 없습니다"
   title: ""
   subtitle: ""
-
 CANNOT_INVITE_SELF:
   text:
     - "자기 자신에게는 신청할 수 없습니다"

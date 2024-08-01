@@ -132,8 +132,8 @@ public class PVPRegion implements Writable {
 
         Lang.send(winner, Lang.FINISH_WINNER);
         Lang.send(loser, Lang.FINISH_LOSER);
-        Lang.send(winner, Lang.ASK_REPLAY);
-        Lang.send(loser, Lang.ASK_REPLAY);
+        Lang.sendClickableCommand(winner, Lang.ASK_REPLAY);
+        Lang.sendClickableCommand(loser, Lang.ASK_REPLAY);
     }
     private void askRestartWhenDraw() {
         prepareMatchReplayRequest();
@@ -143,7 +143,7 @@ public class PVPRegion implements Writable {
             teleportToStartingLocation(player);
 
             Lang.send(player, Lang.DRAW);
-            Lang.send(player, Lang.ASK_REPLAY);
+            Lang.sendClickableCommand(player, Lang.ASK_REPLAY);
         });
     }
     public void cancelByLogout(OfflinePlayer offlinePlayer) {
