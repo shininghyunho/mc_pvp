@@ -20,7 +20,11 @@ public class GameTimer {
                         .filter(Objects::nonNull)
                         .filter(pvpRegion -> pvpRegion.getGameStatus().equals(GameStatus.MATCH_IN_PROGRESS))
                         .forEach(pvpRegion -> {
-                            if (pvpRegion.remainSecond--<=0) pvpRegion.endMatch();
+                            pvpRegion.remainSecond--;
+                            // boss bar 업데이트
+                            pvpRegion.getBossBarEntity().ifPresent(bossBarEntity -> bossBarEntity.update(pvpRegion.remainSecond,Config.MATCH_SECOND));
+
+                            if (pvpRegion.remainSecond<=0) pvpRegion.endMatch();
                             else if (pvpRegion.remainSecond % 10 == 0) {
                                 pvpRegion.regionPlayerUniqueIdMap.values().stream()
                                         .map(UUID::fromString)
@@ -28,8 +32,6 @@ public class GameTimer {
                                         .forEach(player -> {
                                             // 팀별로 남은 시간 알림
                                             Lang.send(player, Lang.BROADCAST_REMAIN_COUNT, s -> s.replaceAll("%second%", pvpRegion.remainSecond + ""));
-                                            // boss bar 업데이트
-                                            pvpRegion.getBossBarEntity().ifPresent(bossBarEntity -> bossBarEntity.update(pvpRegion.remainSecond,Config.MATCH_SECOND));
                                         });
                             }
                         });
