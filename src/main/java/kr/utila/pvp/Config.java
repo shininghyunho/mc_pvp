@@ -24,6 +24,14 @@ public class Config {
      * 탈주한 유저 대기 시간
      */
     public static int WAITING_FOR_LEFT_USER_SECOND;
+    /**
+     * 매치 시간 보스바 타이틀
+     */
+    public static String MATCH_IN_PROGRESS_BOSSBAR_TITLE;
+    /**
+     * 매치 재시작 취소 보스바 타이틀
+     */
+    public static String MATCH_REPLAY_CANCEL_BOSSBAR_TITLE;
 
     public static void load() {
         PLUGIN.saveDefaultConfig();
@@ -38,6 +46,8 @@ public class Config {
         MATCH_WAITING_SECOND = getNonNullValue(config, "MATCH_WAITING_SECOND", 5);
         MATCH_SECOND = getNonNullValue(config, "MATCH_SECOND", 60);
         WAITING_FOR_LEFT_USER_SECOND = getNonNullValue(config, "WAITING_FOR_LEFT_USER_SECOND", 15);
+        MATCH_IN_PROGRESS_BOSSBAR_TITLE = getNonNullValue(config, "MATCH_BOSSBAR_TITLE", "%SECOND% 초 남았습니다.");
+        MATCH_REPLAY_CANCEL_BOSSBAR_TITLE = getNonNullValue(config, "MATCH_REPLAY_CANCEL_BOSSBAR_TITLE", "%SECOND% 초 후 경기가 종료됩니다.");
     }
 
     public static class ClickableValue {
@@ -55,7 +65,9 @@ public class Config {
         }
     }
 
-    private static int getNonNullValue(FileConfiguration config, String path, int defaultValue) {
-        return config.contains(path) ? config.getInt(path) : defaultValue;
+    private static <T> T getNonNullValue(FileConfiguration config, String path, T defaultValue) {
+        return Optional.ofNullable(config.get(path))
+                .map(value -> (T) value)
+                .orElse(defaultValue);
     }
 }

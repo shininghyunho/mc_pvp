@@ -2,10 +2,7 @@ package kr.utila.pvp;
 
 import kr.utila.pvp.managers.pvp.RegionManager;
 import kr.utila.pvp.objects.region.GameStatus;
-import kr.utila.pvp.objects.region.PVPRegion;
-import kr.utila.pvp.objects.region.TeamType;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Objects;
@@ -22,7 +19,7 @@ public class GameTimer {
                         .forEach(pvpRegion -> {
                             pvpRegion.remainSecond--;
                             // boss bar 업데이트
-                            pvpRegion.getBossBarEntity().ifPresent(bossBarEntity -> bossBarEntity.update(pvpRegion.remainSecond,Config.MATCH_SECOND));
+                            pvpRegion.getBossBarEntity().ifPresent(bossBarEntity -> bossBarEntity.update(pvpRegion.remainSecond,Config.MATCH_SECOND,Config.MATCH_IN_PROGRESS_BOSSBAR_TITLE));
 
                             if (pvpRegion.remainSecond<=0) pvpRegion.endMatch();
                             else if (pvpRegion.remainSecond % 10 == 0) {
