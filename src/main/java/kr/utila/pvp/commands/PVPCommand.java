@@ -13,6 +13,7 @@ import kr.utila.pvp.objects.region.TeamType;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -28,6 +29,10 @@ public class PVPCommand {
      * <초대한 플레이어, 초대받은 플레이어> 매핑
      */
     public static Map<UUID, UUID> inviteeMap = new HashMap<>();
+    /**
+     * inviter 의 초대 자동 삭제 타이머
+     */
+    private static final Map<UUID, BukkitTask> inviterExpireTimer = new HashMap<>();
 
     // PVP 자동 삭제 시간
     public static final int PVP_EXPIRE_TIME = 20;
@@ -63,7 +68,7 @@ public class PVPCommand {
                             sendInviteMessage(args, invitee);
 
                             invite(inviter, invitee);
-                            expireInviteTimer(inviter,invitee);
+                            setExpireInviteTimer(inviter,invitee);
                         }
                         case "거절" -> {
                             Player invitee = player;
@@ -106,7 +111,7 @@ public class PVPCommand {
                             readyPvpRegion(invitee);
 
                             // 초대 데이터 삭제
-                            deleteInvite(invitee, getInviter(invitee));
+                            deleteInvite(getInviter(invitee), invitee);
                         }
                         case "다시하기" -> {
                             PVPRegion pvpRegion = getPvpRegion(player);
@@ -249,12 +254,13 @@ public class PVPCommand {
     private static void deleteInvite(Player inviter,Player invitee) {
         deleteInviter(inviter);
         deleteInvitee(invitee);
+        deleteInviterExpireTimer(inviter);
     }
     private static void readyPvpRegion(Player invitee) {
         PVPRegion pvpRegion = RegionManager.getInstance().getAvailableRegion();
         if(pvpRegion == null) return;
-
         pvpRegion.regionPlayerUniqueIdMap.clear();
+
         Player inviter = getInviter(invitee);
         if(inviter == null) return;
         pvpRegion.setTeamToPlayer(TeamType.RED, invitee);
@@ -271,23 +277,31 @@ public class PVPCommand {
     private static boolean isInGame(Player player) {
         return UserManager.getInstance().get(player).getPVPName() != null;
     }
-    private static void expireInviteTimer(Player inviter, Player invitee) {
-        new BukkitRunnable() {
+    private static void setExpireInviteTimer(Player inviter, Player invitee) {
+        var expireTimer = new BukkitRunnable() {
             @Override
             public void run() {
-                if(!isInGame(inviter)) {
-                    deleteInvite(inviter, invitee);
-                    // TODO : 초대가 만료되었음을 알리는 메시지
-                    inviter.sendMessage("§c초대가 만료되었습니다.");
-                    invitee.sendMessage("§c초대가 만료되었습니다.");
-                }
+                deleteInvite(inviter, invitee);
+                // inviter 에게서 온 초대가 만료되었습니다.
+                invitee.sendMessage("§c%s님의 초대가 만료되었습니다.".replaceAll("%s", inviter.getName()));
+                // invitee 에게 보낸 초대가 만료되었습니다.
+                inviter.sendMessage("§c%s님에게 보낸 초대가 만료되었습니다.".replaceAll("%s", invitee.getName()));
             }
         }.runTaskLater(Main.getInstance(), PVP_EXPIRE_TIME * 20);
+        deleteInviterExpireTimer(inviter);
+        inviterExpireTimer.put(inviter.getUniqueId(), expireTimer);
     }
     // clear invite
     public static void clearInvite() {
         logger.info("clear invite info");
         inviterMap.clear();
         inviteeMap.clear();
+    }
+    private static void deleteInviterExpireTimer(Player inviter) {
+        if(inviter == null) return;
+        if(inviterExpireTimer.containsKey(inviter.getUniqueId())) {
+            inviterExpireTimer.get(inviter.getUniqueId()).cancel();
+            inviterExpireTimer.remove(inviter.getUniqueId());
+        }
     }
 }
