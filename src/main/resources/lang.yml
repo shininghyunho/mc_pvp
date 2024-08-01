@@ -74,6 +74,11 @@ WAITING_RESET_GAME:
     - "게임 초기화 중 %seconds%초"
   title: ""
   subtitle: ""
+WAITING_REPLAY_CANCEL:
+  text:
+    - "%seconds%초 후에 경기가 종료됩니다"
+  title: ""
+  subtitle: ""
 RESET_GAME:
   text:
     - "경기가 초기화되었습니다!"

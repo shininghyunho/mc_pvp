@@ -9,7 +9,6 @@ import kr.utila.pvp.objects.User;
 import kr.utila.pvp.objects.region.GameStatus;
 import kr.utila.pvp.objects.region.PVPRegion;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -55,7 +54,7 @@ public class MainListener implements Listener {
             // 게임중이면 일시정지
             if(pvpRegion.getGameStatus().isInGame()) pvpRegion.pause();
             // 이미 일시정지 이면 취소
-            else if(pvpRegion.getGameStatus().equals(GameStatus.PAUSED)) pvpRegion.cancelByReject(player);
+            else if(pvpRegion.getGameStatus().equals(GameStatus.PAUSED)) pvpRegion.cancelGameByReject(player);
             else pvpRegion.waitPlayer(player);
         });
     }

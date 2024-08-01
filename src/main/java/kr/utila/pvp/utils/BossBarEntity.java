@@ -12,20 +12,19 @@ import java.util.List;
 public class BossBarEntity {
     private final BossBar bossBar;
 
-    public BossBarEntity(List<Player> playes) {
-        this.bossBar = Bukkit.createBossBar("BossBarTimer", BarColor.GREEN, BarStyle.SOLID);
-        playes.forEach(bossBar::addPlayer);
+    // BarColor, BarStyle 을 인자로 받는 생성자 추가
+    public BossBarEntity(List<Player> players, BarColor barColor, BarStyle barStyle) {
+        this.bossBar = Bukkit.createBossBar("BossBarTimer", barColor, barStyle);
+        players.forEach(bossBar::addPlayer);
+    }
+
+    public BossBarEntity(List<Player> players) {
+        this(players, BarColor.GREEN, BarStyle.SOLID);
     }
 
     // start
     public void start() {
         bossBar.setVisible(true);
-    }
-
-    // stop
-    public void stop() {
-        bossBar.setVisible(false);
-        bossBar.getPlayers().forEach(bossBar::removePlayer);
     }
 
     // pause
@@ -50,6 +49,7 @@ public class BossBarEntity {
 
     // clear
     public void clear() {
+        bossBar.setVisible(false);
         bossBar.removeAll();
     }
 }

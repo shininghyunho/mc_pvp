@@ -131,11 +131,11 @@ public class PVPCommand {
 
                             // 상대가 나가서 매치가 일시정지된 경우
                             if(pvpRegion.getGameStatus().equals(GameStatus.PAUSED)) {
-                                pvpRegion.getOpponent(player).ifPresent(pvpRegion::cancelByLogout);
+                                pvpRegion.getOpponent(player).ifPresent(pvpRegion::cancelGameByLogout);
                             }
                             // 상대가 다시하기를 요청한 경우
                             else if(pvpRegion.getGameStatus().equals(GameStatus.MATCH_REPLAY_REQUESTED)) {
-                                pvpRegion.cancelByReject(player);
+                                pvpRegion.cancelGameByReject(player);
                             }
                             // 그 외의 경우는 종료 안됨
                         }
@@ -168,7 +168,7 @@ public class PVPCommand {
         Lang.sendClickableCommand(invitee, Lang.ACCEPT_INVITATION);
         StringBuilder message = new StringBuilder();
         for (int i = 2; i < args.length; i++) message.append(args[i]).append(" ");
-        invitee.sendMessage("§7[보낸요청] " + message);
+        if(!message.isEmpty()) invitee.sendMessage("§7[보낸요청] " + message);
     }
 
     private static boolean isValidInvite(Player inviter, Player invitee) {

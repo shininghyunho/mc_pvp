@@ -45,6 +45,8 @@ public class Lang {
     public static LangFormat CANNOT_INVITE_SELF;
     // SEND_INVITATION
     public static LangFormat SEND_INVITATION;
+    // WAITING_REPLAY_CANCEL
+    public static LangFormat WAITING_REPLAY_CANCEL;
 
     public static void load() {
         Main.getInstance().saveResource("lang.yml", true);
@@ -142,6 +144,7 @@ public class Lang {
         PLAYER_NOT_FOUND = getNotNullLangFormat(yamlConfiguration, "UNFOUNDED_PLAYER");
         CANNOT_INVITE_SELF = getNotNullLangFormat(yamlConfiguration, "CANNOT_INVITE_SELF");
         SEND_INVITATION = getNotNullLangFormat(yamlConfiguration, "SEND_INVITATION");
+        WAITING_REPLAY_CANCEL = getNotNullLangFormat(yamlConfiguration, "WAITING_REPLAY_CANCEL");
     }
 
     public static LangFormat getNotNullLangFormat(YamlConfiguration yamlConfiguration,String path) {

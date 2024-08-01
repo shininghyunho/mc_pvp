@@ -19,7 +19,7 @@ public class GameTimer {
                         .forEach(pvpRegion -> {
                             pvpRegion.remainSecond--;
                             // boss bar 업데이트
-                            pvpRegion.getBossBarEntity().ifPresent(bossBarEntity -> bossBarEntity.update(pvpRegion.remainSecond,Config.MATCH_SECOND,Config.MATCH_IN_PROGRESS_BOSSBAR_TITLE));
+                            pvpRegion.getMatchBossBar().ifPresent(bossBarEntity -> bossBarEntity.update(pvpRegion.remainSecond,Config.MATCH_SECOND,Config.MATCH_IN_PROGRESS_BOSSBAR_TITLE));
 
                             if (pvpRegion.remainSecond<=0) pvpRegion.endMatch();
                             else if (pvpRegion.remainSecond % 10 == 0) {

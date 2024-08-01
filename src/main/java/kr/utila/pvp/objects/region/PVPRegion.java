@@ -11,6 +11,8 @@ import kr.utila.pvp.objects.Writable;
 import kr.utila.pvp.utils.BossBarEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -22,6 +24,9 @@ import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
 
+// 해당 region 에 플레이어가 있는지 확인
+// Team 설정이 되었는지 여부
+// get name
 public class PVPRegion implements Writable {
     Logger logger = Logger.getLogger("PVPRegion");
     private static final String COMMANDS="commands";
@@ -39,7 +44,8 @@ public class PVPRegion implements Writable {
     private final Set<UUID> replayAcceptPlayers = new HashSet<>();
     public int remainSecond;
     private final List<String> commands;
-    public BossBarEntity bossBarEntity;
+    public BossBarEntity matchBossBar;
+    public BossBarEntity matchReplayCancelBossBar;
     private GameStatus priorGameStatus;
 
     private int second = 0;
@@ -57,6 +63,16 @@ public class PVPRegion implements Writable {
         this.remainSecond = remainSecond;
         this.commands = commands;
     }
+    // inner class
+    public static class TeamRegion {
+        public LocationDTO startingLocation;
+        public List<ItemStack> itemPackage;
+
+        public TeamRegion(LocationDTO startingLocation, List<ItemStack> itemPackage) {
+            this.startingLocation = startingLocation;
+            this.itemPackage = itemPackage;
+        }
+    }
     public GameStatus getGameStatus() {
         return gameStatus;
     }
@@ -69,7 +85,6 @@ public class PVPRegion implements Writable {
                 ? TeamType.RED
                 : TeamType.BLUE);
     }
-    // 해당 region 에 플레이어가 있는지 확인
     public boolean containsPlayer(Player player) {
         return regionPlayerUniqueIdMap.containsValue(player.getUniqueId().toString());
     }
@@ -111,21 +126,21 @@ public class PVPRegion implements Writable {
         }
 
         // boss bar 삭제
-        bossBarEntity.clear();
+        matchBossBar.clear();
 
         double player1Health = player1.getHealth();
         double player2Health = player2.getHealth();
 
         // 승부 결정
         if (player1Health > player2Health) {
-            askRestartWhenNotDraw(player1, player2);
+            replayWhenNotDraw(player1, player2);
         } else if (player2Health > player1Health) {
-            askRestartWhenNotDraw(player2, player1);
+            replayWhenNotDraw(player2, player1);
         } else {
-            askRestartWhenDraw();
+            replayWhenDraw();
         }
     }
-    public void askRestartWhenNotDraw(Player winner, Player loser) {
+    public void replayWhenNotDraw(Player winner, Player loser) {
         prepareMatchReplayRequest();
         // 승자, 패자 플레이어를 스타팅 지역으로 이동
         teleportToStartingLocation(winner);
@@ -138,7 +153,7 @@ public class PVPRegion implements Writable {
         Lang.sendClickableCommand(winner, Lang.ASK_REPLAY);
         Lang.sendClickableCommand(loser, Lang.ASK_REPLAY);
     }
-    private void askRestartWhenDraw() {
+    private void replayWhenDraw() {
         prepareMatchReplayRequest();
         // 플레이어들을 스타팅 지역으로 이동
         regionPlayerUniqueIdMap.values().forEach(uuid -> {
@@ -149,7 +164,7 @@ public class PVPRegion implements Writable {
             Lang.sendClickableCommand(player, Lang.ASK_REPLAY);
         });
     }
-    public void cancelByLogout(OfflinePlayer offlinePlayer) {
+    public void cancelGameByLogout(OfflinePlayer offlinePlayer) {
         prepareCancel();
 
         if (offlinePlayer.getPlayer() == null) return;
@@ -159,7 +174,7 @@ public class PVPRegion implements Writable {
             Lang.send(opponent, Lang.PVP_CANCEL_BY_LOGOUT, s -> s.replaceAll("%player%", Objects.toString(offlinePlayer.getName(), "")));
         });
     }
-    public void cancelByReject(Player rejectingPlayer) {
+    public void cancelGameByReject(Player rejectingPlayer) {
         prepareCancel();
 
         regionPlayerUniqueIdMap.values().forEach(uuid -> {
@@ -224,7 +239,6 @@ public class PVPRegion implements Writable {
             logger.warning("파일 저장 오류 발생. Region: "+name+" Error: "+e.getMessage());
         }
     }
-
     public void executeCommands() {
         commands.forEach(command -> {
             try {
@@ -235,10 +249,9 @@ public class PVPRegion implements Writable {
             }
         });
     }
-    public Optional<BossBarEntity> getBossBarEntity() {
-        return Optional.ofNullable(bossBarEntity);
+    public Optional<BossBarEntity> getMatchBossBar() {
+        return Optional.ofNullable(matchBossBar);
     }
-
     public void replayAccept(Player player) {
         replayAcceptPlayers.add(player.getUniqueId());
         if (replayAcceptPlayers.size() == 2) {
@@ -247,28 +260,12 @@ public class PVPRegion implements Writable {
             restart();
         }
     }
-
-    // Team 설정이 되었는지 여부
     public boolean isTeamSet() {
         return teamRegionMap.size() == 2;
     }
-
-    // get name
     public String getName() {
         return name;
     }
-
-    // inner class
-    public static class TeamRegion {
-        public LocationDTO startingLocation;
-        public List<ItemStack> itemPackage;
-
-        public TeamRegion(LocationDTO startingLocation, List<ItemStack> itemPackage) {
-            this.startingLocation = startingLocation;
-            this.itemPackage = itemPackage;
-        }
-    }
-
     // private methods
     private void prepareMatch(boolean isNewGame) {
         // 경기에 참가하는 플레이어 목록
@@ -276,6 +273,8 @@ public class PVPRegion implements Writable {
         if (players == null) return;
         // 경기 초기화
         initializeMatch(players);
+        // matchReplayCancelBossBar 초기화
+        if(matchReplayCancelBossBar != null) matchReplayCancelBossBar.clear();
     }
     private void initializeMatch(@NotNull List<Player> players) {
         gameStatus = GameStatus.MATCH_INITIALIZED;
@@ -317,6 +316,26 @@ public class PVPRegion implements Writable {
                     cancel();
                 }
                 else players.forEach(player -> Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", second + "")));
+            }
+        }.runTaskTimer(Main.getInstance(), 0, 20);
+    }
+    private void replayMatchCancelTimer() {
+        second = Config.MATCH_REPLAY_CANCEL_SECOND;
+        // ready match cancel boss bar
+        matchReplayCancelBossBar = new BossBarEntity(getPlayers(), BarColor.YELLOW, BarStyle.SOLID);
+        matchReplayCancelBossBar.start();
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if(gameStatus.equals(GameStatus.PAUSED)) return;
+                second--;
+                matchReplayCancelBossBar.update(second , Config.MATCH_REPLAY_CANCEL_SECOND, Config.MATCH_REPLAY_CANCEL_BOSSBAR_TITLE);
+                if (second <= 0) {
+                    cancelGame();
+                    matchReplayCancelBossBar.clear();
+                    cancel();
+                }
             }
         }.runTaskTimer(Main.getInstance(), 0, 20);
     }
@@ -367,6 +386,8 @@ public class PVPRegion implements Writable {
         gameStatus = GameStatus.MATCH_REPLAY_REQUESTED;
         // 게임 수락 여부 초기화
         replayAcceptPlayers.clear();
+        // 매치 재시작 취소 타이머 시작
+        replayMatchCancelTimer();
     }
     /**
      * 시작 지역으로 이동
@@ -389,7 +410,7 @@ public class PVPRegion implements Writable {
      */
     private void prepareCancel() {
         gameStatus = GameStatus.NOT_STARTED;
-        bossBarEntity.stop();
+        matchBossBar.clear();
     }
     /**
      * 플레이어들을 준비시키고 플레이어 목록을 반환
@@ -403,7 +424,7 @@ public class PVPRegion implements Writable {
             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
             // 오프라인 플레이어면 취소
             if (!offlinePlayer.isOnline()) {
-                cancelByLogout(offlinePlayer);
+                cancelGameByLogout(offlinePlayer);
                 return null;
             }
             // 새게임이면 User.start() 호출
@@ -443,15 +464,15 @@ public class PVPRegion implements Writable {
         setBossBarEntity();
     }
     private void setBossBarEntity() {
-        bossBarEntity = new BossBarEntity(getPlayers());
-        bossBarEntity.start();
+        matchBossBar = new BossBarEntity(getPlayers());
+        matchBossBar.start();
     }
     private void resumeMatch() {
-        bossBarEntity.start();
+        matchBossBar.start();
         gameStatus = priorGameStatus;
     }
     private void pauseMatch() {
-        bossBarEntity.pause();
+        matchBossBar.pause();
         priorGameStatus = gameStatus;
         gameStatus = GameStatus.PAUSED;
     }
