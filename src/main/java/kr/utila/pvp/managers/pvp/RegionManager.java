@@ -6,14 +6,15 @@ import kr.utila.pvp.objects.LocationDTO;
 import kr.utila.pvp.objects.region.GameStatus;
 import kr.utila.pvp.objects.region.PVPRegion;
 import kr.utila.pvp.objects.region.TeamType;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class RegionManager extends Manager {
+    Logger logger = Logger.getLogger(RegionManager.class.getName());
 
     private static final File DIRECTORY = new File(Main.getInstance().getDataFolder(), "pvp_regions");
 
@@ -42,22 +43,24 @@ public class RegionManager extends Manager {
     }
 
     public void setTeamLocation(String name, TeamType team, LocationDTO startingLocation) {
-        PVPRegion pvpRegion = PVP_REGIONS.get(name);
-        if (!pvpRegion.teamRegionMap.containsKey(team)) {
-            pvpRegion.teamRegionMap.put(team, new PVPRegion.TeamRegion(startingLocation, null));
-            return;
-        }
-        pvpRegion.teamRegionMap.get(team).startingLocation = startingLocation;
+        var pvpRegion = PVP_REGIONS.get(name);
+        if(pvpRegion == null) return;
+
+        var teamRegion = pvpRegion.teamRegionMap.get(team);
+        if(teamRegion == null) pvpRegion.teamRegionMap.put(team, new PVPRegion.TeamRegion(startingLocation, null));
+        else teamRegion.startingLocation = startingLocation;
+
         pvpRegion.write();
     }
 
     public void setTeamStartItem(String name, TeamType team, List<ItemStack> itemStacks) {
         PVPRegion pvpRegion = PVP_REGIONS.get(name);
-        if (!pvpRegion.teamRegionMap.containsKey(team)) {
-            pvpRegion.teamRegionMap.put(team, new PVPRegion.TeamRegion(null, itemStacks));
-            return;
-        }
-        pvpRegion.teamRegionMap.get(team).itemPackage = itemStacks;
+        if(pvpRegion == null) return;
+
+        var teamRegion = pvpRegion.teamRegionMap.get(team);
+        if(teamRegion == null) pvpRegion.teamRegionMap.put(team, new PVPRegion.TeamRegion(null, itemStacks));
+        else teamRegion.itemPackage = itemStacks;
+
         pvpRegion.write();
     }
 
@@ -105,58 +108,65 @@ public class RegionManager extends Manager {
     }
 
     @Override
-    public void load() throws Exception {
+    public void load() {
+        // TEST
+        logger.info("RegionManager load");
+
         PVP_REGIONS.clear();
-        if (!DIRECTORY.exists()) {
-            DIRECTORY.mkdirs();
-            return;
-        }
-        if (DIRECTORY.listFiles() == null) {
-            return;
-        }
-        for (File file : DIRECTORY.listFiles()) {
-            YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(file);
-            String name = yamlConfiguration.getString("name");
-            // load commands
-            List<String> commands = yamlConfiguration.contains("commands")
-                    ? yamlConfiguration.getStringList("commands")
-                    : new ArrayList<>(List.of("tellraw @p \"경기장 초기화 예시\""));
 
-            LocationDTO pos1 = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("pos1"));
-            LocationDTO pos2 = LocationDTO.readYAML(yamlConfiguration.getConfigurationSection("pos2"));
-            Map<TeamType, PVPRegion.TeamRegion> regionData = new HashMap<>();
-            if (yamlConfiguration.contains("regionData")) {
-                ConfigurationSection teamRegionSection = yamlConfiguration.getConfigurationSection("regionData");
-                for (String team : teamRegionSection.getKeys(false)) {
-                    TeamType teamType = TeamType.valueOf(team);
-                    LocationDTO startingLocation = null;
-                    if (teamRegionSection.contains(team + ".startingLocation")) {
-                        startingLocation = LocationDTO.readYAML(teamRegionSection.getConfigurationSection(team + ".startingLocation"));
-                    }
-                    List<ItemStack> itemPackage = null;
-                    if (teamRegionSection.contains(team + ".items")) {
-                        itemPackage = new ArrayList<>();
-                        for (String key : teamRegionSection.getConfigurationSection(team + ".items").getKeys(false)) {
-                            itemPackage.add(teamRegionSection.getItemStack(team + ".items." + key));
-                        }
-                    }
-                    regionData.put(teamType, new PVPRegion.TeamRegion(startingLocation, itemPackage));
-                }
-            }
-            // load game status
-            GameStatus gameStatus = GameStatus.valueOf(yamlConfiguration.getString("gameStatus"));
+        if(!DIRECTORY.mkdir()) return;
+        Optional.ofNullable(DIRECTORY.listFiles()).ifPresent(files -> {
+            Arrays.stream(files).forEach(file -> {
+                var yaml = YamlConfiguration.loadConfiguration(file);
+                // name
+                var name = yaml.contains("name")
+                        ? yaml.getString("name")
+                        : file.getName().replace(".yml", "");
+                // commands
+                var commands = yaml.contains("commands")
+                        ? yaml.getStringList("commands")
+                        : new ArrayList<>(List.of("tellraw @p \"경기장 초기화 예시\""));
+                // pos
+                var pos1Section = yaml.getConfigurationSection("pos1");
+                var pos2Section = yaml.getConfigurationSection("pos2");
+                if(pos1Section == null || pos2Section == null) return;
+                var pos1 = LocationDTO.readYAML(pos1Section);
+                var pos2 = LocationDTO.readYAML(pos2Section);
 
-            Map<TeamType, String> regionPlayer = new HashMap<>();
-            int remainSecond = 0;
-            if (yamlConfiguration.contains("regionPlayer")) {
-                ConfigurationSection gamingSection = yamlConfiguration.getConfigurationSection("regionPlayer");
-                for (String team : gamingSection.getKeys(false)) {
-                    regionPlayer.put(TeamType.valueOf(team), gamingSection.getString(team));
+                // teamRegions
+                var teamRegions = new HashMap<TeamType, PVPRegion.TeamRegion>();
+                if (yaml.contains("teamRegions")) {
+                    var teamRegionSection = yaml.getConfigurationSection("teamRegions");
+                    if (teamRegionSection != null) {
+                        teamRegionSection.getKeys(false).forEach(team -> {
+                            var teamType = TeamType.valueOf(team);
+                            var startingLocation = teamRegionSection.contains(team + ".startingLocation")
+                                    ? LocationDTO.readYAML(Objects.requireNonNull(teamRegionSection.getConfigurationSection(team + ".startingLocation")))
+                                    : null;
+                            var itemPackage = teamRegionSection.contains(team + ".items")
+                                    ? teamRegionSection.getStringList(team + ".items").stream().map(yaml::getItemStack).toList()
+                                    : null;
+                            teamRegions.put(teamType, new PVPRegion.TeamRegion(startingLocation, itemPackage));
+                        });
+                    }
                 }
-                remainSecond = yamlConfiguration.getInt("remainSecond");
-            }
-            // PVP_REGIONS 에 추가
-            PVP_REGIONS.put(name, new PVPRegion(name, pos1, pos2, regionData, regionPlayer, gameStatus, remainSecond, commands));
-        }
+                // game status
+                var gameStatus = yaml.contains("gameStatus")
+                        ? GameStatus.valueOf(yaml.getString("gameStatus"))
+                        : GameStatus.NOT_STARTED;
+                // regionPlayer
+                var regionPlayerMap = new HashMap<TeamType, String>();
+                var remainSecond = 0;
+                if (yaml.contains("regionPlayer")) {
+                    var gamingSection = yaml.getConfigurationSection("regionPlayer");
+                    if (gamingSection != null) {
+                        gamingSection.getKeys(false).forEach(team -> regionPlayerMap.put(TeamType.valueOf(team), gamingSection.getString(team)));
+                        remainSecond = yaml.getInt("remainSecond");
+                    }
+                }
+                // PVP_REGIONS 에 추가
+                PVP_REGIONS.put(name, new PVPRegion(name, pos1, pos2, teamRegions, regionPlayerMap, gameStatus, remainSecond, commands));
+            });
+        });
     }
 }

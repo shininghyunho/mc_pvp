@@ -181,6 +181,10 @@ public class PVPRegion implements Writable {
     }
     @Override
     public void write() {
+        // TEST
+        logger.info("write() 호출");
+
+        if(name == null) return;
         final File PATH = new File(DIRECTORY, name + ".yml");
         YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(PATH);
         // name
@@ -189,15 +193,19 @@ public class PVPRegion implements Writable {
         pos1.writeYAML(yamlConfiguration.createSection("pos1"));
         pos2.writeYAML(yamlConfiguration.createSection("pos2"));
         // teamRegion
-        ConfigurationSection teamRegionSection = yamlConfiguration.createSection("regionData");
-        teamRegionMap.forEach((teamType, teamRegion) -> {
-            teamRegionSection.set(teamType.name() + ".teamType", teamType.name());
-            LocationDTO startingLocation = teamRegion.startingLocation;
-            if (startingLocation != null) startingLocation.writeYAML(teamRegionSection.createSection(teamType.name() + ".startingLocation"));
+        var teamRegionSection = yamlConfiguration.createSection("teamRegions");
+        for(TeamType teamType : teamRegionMap.keySet()) {
+            var teamRegion = teamRegionMap.get(teamType);
+            if(teamRegion == null) continue;
 
-            List<ItemStack> itemPackage = teamRegion.itemPackage;
+            teamRegionSection.set(teamType.name() + ".teamType", teamType.name());
+            // startingLocation
+            var startingLocation = teamRegion.startingLocation;
+            if (startingLocation != null) startingLocation.writeYAML(teamRegionSection.createSection(teamType.name() + ".startingLocation"));
+            // items
+            var itemPackage = teamRegion.itemPackage;
             if (itemPackage != null) for(int i = 0; i < itemPackage.size(); i++) teamRegionSection.set(teamType.name() + ".items." + i, itemPackage.get(i));
-        });
+        }
         // regionPlayer
         if(gameStatus.isInGame()) {
             ConfigurationSection gamingSection = yamlConfiguration.createSection("regionPlayer");
