@@ -109,13 +109,7 @@ public class PVPCommand {
                             if(!pvpRegion.getGameStatus().equals(GameStatus.MATCH_REPLAY_REQUESTED)) break;
 
                             // 다시하기 요청 수락
-                            Optional<TeamType> teamTypeOptional = pvpRegion.getTeam(player);
-                            if (teamTypeOptional.isEmpty()) return false;
-                            teamTypeOptional.ifPresent(teamType -> {
-                                pvpRegion.isAcceptedMap.put(teamType, true);
-                            });
-                            // 다른 플레이어가 아직 다시하기 요청을 수락하지 않았을 때 종료
-                            for (boolean isAccepted : pvpRegion.isAcceptedMap.values()) if (!isAccepted) return false;
+                            pvpRegion.replayAccept(player);
 
                             // 다시하기 진행
                             Lang.send(player, Lang.ACCEPT_RETRY, s -> s.replaceAll("%player%", player.getName()));

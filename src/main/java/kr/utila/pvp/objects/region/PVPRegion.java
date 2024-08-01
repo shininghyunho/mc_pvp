@@ -36,7 +36,7 @@ public class PVPRegion implements Writable {
     public final Map<TeamType, TeamRegion> teamRegionMap;
     public  final Map<TeamType, String> regionPlayerUniqueIdMap;
     private GameStatus gameStatus;
-    public Map<TeamType, Boolean> isAcceptedMap;
+    private final Set<UUID> replayAcceptPlayers = new HashSet<>();
     public int remainSecond;
     private final List<String> commands;
     public BossBarEntity bossBarEntity;
@@ -231,6 +231,15 @@ public class PVPRegion implements Writable {
         return Optional.ofNullable(bossBarEntity);
     }
 
+    public void replayAccept(Player player) {
+        replayAcceptPlayers.add(player.getUniqueId());
+        if (replayAcceptPlayers.size() == 2) {
+            replayAcceptPlayers.clear();
+            Lang.send(player, Lang.ACCEPT_RETRY, s -> s.replaceAll("%player%", player.getName()));
+            restart();
+        }
+    }
+
     // Team 설정이 되었는지 여부
     public boolean isTeamSet() {
         return teamRegionMap.size() == 2;
@@ -257,6 +266,7 @@ public class PVPRegion implements Writable {
     }
     private void initializeMatch(@NotNull List<Player> players) {
         gameStatus = GameStatus.MATCH_INITIALIZED;
+        replayAcceptPlayers.clear();
         executeCommands();
         initializeMatchTimer(players);
     }
@@ -343,7 +353,7 @@ public class PVPRegion implements Writable {
     private void prepareMatchReplayRequest() {
         gameStatus = GameStatus.MATCH_REPLAY_REQUESTED;
         // 게임 수락 여부 초기화
-        isAcceptedMap = new HashMap<>();
+        replayAcceptPlayers.clear();
     }
     /**
      * 시작 지역으로 이동
