@@ -94,6 +94,12 @@ public class PVPCommand {
                                 invitee.sendMessage("§c초대받지 않은 플레이어입니다.");
                                 break;
                             }
+                            // 상대가 존재하지 않을 때
+                            Player inviter = getInviter(invitee);
+                            if(inviter == null) {
+                                Lang.send(invitee, Lang.PLAYER_NOT_FOUND);
+                                break;
+                            }
                             
                             // 준비된 경기장이 없을 때
                             if (!RegionManager.getInstance().hasAvailableSpace()) {
@@ -240,12 +246,14 @@ public class PVPCommand {
     }
     // delete invitee
     private static void deleteInvitee(Player invitee) {
+        if(invitee == null) return;
         logger.info("deleteInvitee : "+invitee.getUniqueId());
         if(!isInvitee(invitee)) return;
         inviterMap.remove(invitee.getUniqueId());
     }
     // delete inviter
     private static void deleteInviter(Player inviter) {
+        if(inviter == null) return;
         logger.info("deleteInviter : "+inviter.getUniqueId());
         if(!isInviter(inviter)) return;
         inviteeMap.remove(inviter.getUniqueId());
