@@ -27,7 +27,7 @@ public class Lang {
     public static LangFormat WAITING_PLAYER;
     public static LangFormat BROADCAST_REMAIN_COUNT;
     public static LangFormat DRAW;
-    public static LangFormat RESTART;
+    public static LangFormat RESUME;
     public static LangFormat AVAILABLE_TO_GET_REWARD;
     public static LangFormat NEED_TO_EMPTY_SPACE;
     public static LangFormat RANK_FORMAT;
@@ -136,7 +136,7 @@ public class Lang {
         WAITING_PLAYER = getNotNullLangFormat(yamlConfiguration, "WAITING_PLAYER");
         BROADCAST_REMAIN_COUNT = getNotNullLangFormat(yamlConfiguration, "BROADCAST_REMAIN_COUNT");
         DRAW = getNotNullLangFormat(yamlConfiguration, "DRAW");
-        RESTART = getNotNullLangFormat(yamlConfiguration, "RESTART");
+        RESUME = getNotNullLangFormat(yamlConfiguration, "RESUME");
         AVAILABLE_TO_GET_REWARD = getNotNullLangFormat(yamlConfiguration, "AVAILABLE_TO_GET_REWARD");
         NEED_TO_EMPTY_SPACE = getNotNullLangFormat(yamlConfiguration, "NEED_TO_EMPTY_SPACE");
         RANK_FORMAT = getNotNullLangFormat(yamlConfiguration, "RANK_FORMAT");

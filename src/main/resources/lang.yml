@@ -94,7 +94,8 @@ DRAW:
     - "게임이 무승부 처리되었습니다"
   title: ""
   subtitle: ""
-RESTART:
+# 일시정지 되었다가 다시 재개될 때
+RESUME:
   text:
     - "게임이 다시 재개됩니다"
   title: ""
