@@ -300,6 +300,7 @@ public class PVPRegion implements Writable {
             public void run() {
                 logger.info("initializeMatchTimer run second : "+ matchSecond);
                 if(gameStatus.equals(GameStatus.PAUSED)) return;
+                getMatchPausedBossBar().ifPresent(BossBarEntity::clear);
                 if(!gameStatus.equals(GameStatus.MATCH_INITIALIZED)) {
                     cancel();
                 }
@@ -327,6 +328,7 @@ public class PVPRegion implements Writable {
             public void run() {
                 logger.info("waitMatchTimer run second : "+ matchSecond);
                 if(gameStatus.equals(GameStatus.PAUSED)) return;
+                getMatchPausedBossBar().ifPresent(BossBarEntity::clear);
                 if(!gameStatus.equals(GameStatus.MATCH_WAITING)) {
                     cancel();
                 }
@@ -350,9 +352,6 @@ public class PVPRegion implements Writable {
     }
     private void startMatchTimer() {
         logger.info("startMatchTimer");
-        matchBossBar = new BossBarEntity(getPlayers());
-        getMatchBossBar().ifPresent(BossBarEntity::start);
-        
         matchSecond = Config.MATCH_SECOND;
         new BukkitRunnable() {
             @Override
@@ -360,12 +359,13 @@ public class PVPRegion implements Writable {
                 logger.info("startMatchTimer run second : "+ matchSecond);
                 logger.info("gameStatus : "+gameStatus);
                 if(gameStatus.equals(GameStatus.PAUSED)) return;
+                getMatchPausedBossBar().ifPresent(BossBarEntity::clear);
                 if(!gameStatus.equals(GameStatus.MATCH_IN_PROGRESS)) {
                     getMatchBossBar().ifPresent(BossBarEntity::clear);
                     cancel();
                 }
                 matchSecond--;
-                getMatchBossBar().ifPresent(bossBar -> bossBar.update(matchSecond, Config.MATCH_SECOND, Config.MATCH_IN_PROGRESS_BOSSBAR_TITLE));
+                setMatchBossBar(Config.MATCH_IN_PROGRESS_BOSSBAR_TITLE.replaceAll("%second%",String.valueOf(matchSecond)), matchSecond);
                 if (matchSecond <= 0) {
                     endMatch();
                     getMatchBossBar().ifPresent(BossBarEntity::clear);
@@ -378,20 +378,18 @@ public class PVPRegion implements Writable {
     private void replayMatchCancelTimer() {
         logger.info("replayMatchCancelTimer");
         matchSecond = Config.MATCH_REPLAY_CANCEL_SECOND;
-        // ready match cancel boss bar
-        matchReplayCancelBossBar = new BossBarEntity(getPlayers(),Config.MATCH_REPLAY_CANCEL_BOSSBAR_TITLE.replaceAll("%second%",String.valueOf(Config.MATCH_REPLAY_CANCEL_SECOND)), BarColor.YELLOW, BarStyle.SOLID);
-        getMatchReplayCancelBossBar().ifPresent(BossBarEntity::start);
         new BukkitRunnable() {
             @Override
             public void run() {
                 logger.info("replayMatchCancelTimer run second : "+ matchSecond);
                 if(gameStatus.equals(GameStatus.PAUSED)) return;
+                getMatchPausedBossBar().ifPresent(BossBarEntity::clear);
                 if(!gameStatus.equals(GameStatus.MATCH_REPLAY_REQUESTED)) {
                     getMatchReplayCancelBossBar().ifPresent(BossBarEntity::clear);
                     cancel();
                 }
                 matchSecond--;
-                getMatchReplayCancelBossBar().ifPresent(bossBar -> bossBar.update(matchSecond, Config.MATCH_REPLAY_CANCEL_SECOND, Config.MATCH_REPLAY_CANCEL_BOSSBAR_TITLE));
+                setMatchReplayCancelBossBar(Config.MATCH_REPLAY_CANCEL_BOSSBAR_TITLE.replaceAll("%second%",String.valueOf(matchSecond)), matchSecond);
                 if (matchSecond <= 0) {
                     cancelGame();
                     getMatchReplayCancelBossBar().ifPresent(BossBarEntity::clear);
@@ -409,8 +407,6 @@ public class PVPRegion implements Writable {
         logger.info("waitLeftPlayerTimer");
         // 나간 플레이어가 다시 접속할 때까지 대기
         pauseSecond = Config.WAITING_FOR_LEFT_USER_SECOND;
-        matchPausedBossBar = new BossBarEntity(getPlayers(), Config.WAITING_FOR_LEFT_USER_BOSSBAR_TITLE.replaceAll("%second%",String.valueOf(Config.WAITING_FOR_LEFT_USER_SECOND)), BarColor.WHITE, BarStyle.SOLID);
-        getMatchPausedBossBar().ifPresent(BossBarEntity::start);
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -423,8 +419,8 @@ public class PVPRegion implements Writable {
 
                 // 대기해도 안들어오면 경기 종료
                 pauseSecond--;
-                getMatchPausedBossBar().ifPresent(bossBar -> bossBar.update(pauseSecond, Config.WAITING_FOR_LEFT_USER_SECOND, Config.WAITING_FOR_LEFT_USER_BOSSBAR_TITLE));
-                if (pauseSecond <= 0)  {
+                setMatchPausedBossBar(Config.WAITING_FOR_LEFT_USER_BOSSBAR_TITLE.replaceAll("%second%",String.valueOf(pauseSecond)), pauseSecond);
+                if(pauseSecond <= 0)  {
                     giveReward(waitPlayer, quitPlayer);
                     cancelGame();
                     getMatchPausedBossBar().ifPresent(BossBarEntity::clear);
@@ -516,29 +512,35 @@ public class PVPRegion implements Writable {
     }
     private void resumeMatch() {
         logger.info("resumeMatch");
-        startBossBar();
+        getMatchPausedBossBar().ifPresent(BossBarEntity::clear);
         gameStatus = priorGameStatus;
     }
     private void pauseMatch() {
         logger.info("pauseMatch");
-        pauseBossBar();
+        clearBossBar();
         priorGameStatus = gameStatus;
         gameStatus = GameStatus.PAUSED;
     }
-    private void startBossBar() {
-        logger.info("startBossBar");
-        getMatchPausedBossBar().ifPresent(BossBarEntity::clear);
+    private void clearBossBar() {
+        logger.info("clearBossBar");
         switch (gameStatus) {
-            case MATCH_IN_PROGRESS -> getMatchBossBar().ifPresent(BossBarEntity::start);
-            case MATCH_REPLAY_REQUESTED -> getMatchReplayCancelBossBar().ifPresent(BossBarEntity::start);
+            case MATCH_IN_PROGRESS -> getMatchBossBar().ifPresent(BossBarEntity::clear);
+            case MATCH_REPLAY_REQUESTED -> getMatchReplayCancelBossBar().ifPresent(BossBarEntity::clear);
         }
     }
-    private void pauseBossBar() {
-        logger.info("pauseBossBar");
-        getMatchPausedBossBar().ifPresent(BossBarEntity::start);
-        switch (gameStatus) {
-            case MATCH_IN_PROGRESS -> getMatchBossBar().ifPresent(BossBarEntity::pause);
-            case MATCH_REPLAY_REQUESTED -> getMatchReplayCancelBossBar().ifPresent(BossBarEntity::pause);
-        }
+    private void setMatchBossBar(String title, int second) {
+        if(matchBossBar != null) matchBossBar.clear();
+        if(!gameStatus.equals(GameStatus.MATCH_IN_PROGRESS)) return;
+        matchBossBar = new BossBarEntity(getPlayers(), title, second, Config.MATCH_SECOND, BarColor.GREEN, BarStyle.SOLID);
+    }
+    private void setMatchReplayCancelBossBar(String title, int second) {
+        if(matchReplayCancelBossBar != null) matchReplayCancelBossBar.clear();
+        if(!gameStatus.equals(GameStatus.MATCH_REPLAY_REQUESTED)) return;
+        matchReplayCancelBossBar = new BossBarEntity(getPlayers(), title, second, Config.MATCH_REPLAY_CANCEL_SECOND, BarColor.YELLOW, BarStyle.SOLID);
+    }
+    private void setMatchPausedBossBar(String title, int second) {
+        if(matchPausedBossBar != null) matchPausedBossBar.clear();
+        if(!gameStatus.equals(GameStatus.PAUSED)) return;
+        matchPausedBossBar = new BossBarEntity(getPlayers(), title, second, Config.WAITING_FOR_LEFT_USER_SECOND, BarColor.WHITE, BarStyle.SOLID);
     }
 }

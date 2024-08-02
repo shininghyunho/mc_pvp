@@ -149,3 +149,9 @@ GAME_TERMINATED:
     - "게임이 종료되었습니다"
   title: ""
   subtitle: ""
+# 게임중에는 PVP 관련 명령어 외 다른 명령어 사용 불가
+CANNOT_USE_COMMAND:
+  text:
+    - "게임중에는 명령어를 사용할 수 없습니다"
+  title: ""
+  subtitle: ""

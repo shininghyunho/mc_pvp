@@ -1,6 +1,5 @@
 package kr.utila.pvp.utils;
 
-import kr.utila.pvp.Config;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -14,38 +13,19 @@ public class BossBarEntity {
     Logger logger = Logger.getLogger(BossBarEntity.class.getName());
     private final BossBar bossBar;
 
-    // BarColor, BarStyle 을 인자로 받는 생성자 추가
-    public BossBarEntity(List<Player> players, String title, BarColor barColor, BarStyle barStyle) {
+    public BossBarEntity(List<Player> players, String title, int second, int totalSecond, BarColor barColor, BarStyle barStyle) {
         this.bossBar = Bukkit.createBossBar(title, barColor, barStyle);
+        this.bossBar.setVisible(false);
         players.forEach(bossBar::addPlayer);
+        set(second, totalSecond, title);
     }
 
-    public BossBarEntity(List<Player> players) {
-        this(players, "타이머",BarColor.GREEN, BarStyle.SOLID);
-    }
-
-    // start
-    public void start() {
-        logger.info("BossBarEntity start : " + bossBar.getTitle());
-        bossBar.setVisible(true);
-    }
-
-    // pause
-    public void pause() {
+    // clear
+    public void clear() {
         bossBar.setVisible(false);
+        bossBar.removeAll();
     }
 
-    public void update(int second, int totalSecond, String title) {
-        logger.info("BossBarEntity update : " + bossBar.getTitle());
-        // print all players
-        bossBar.getPlayers().forEach(player -> logger.info(player.getName()));
-        // visible
-        bossBar.setVisible(true);
-
-        double progress = (double) second / totalSecond;
-        setProgress(progress);
-        setTitle(title.replaceAll("%second%", String.valueOf(second)));
-    }
     // set progress
     private void setProgress(double progress) {
         // validate
@@ -59,9 +39,16 @@ public class BossBarEntity {
         bossBar.setTitle(title);
     }
 
-    // clear
-    public void clear() {
-        bossBar.setVisible(false);
-        bossBar.removeAll();
+    // set
+    private void set(int second, int totalSecond, String title) {
+        // print all players
+        bossBar.getPlayers().forEach(player -> logger.info(player.getName()));
+
+        double progress = (double) second / totalSecond;
+        setProgress(progress);
+        setTitle(title.replaceAll("%second%", String.valueOf(second)));
+
+        // visible
+        bossBar.setVisible(true);
     }
 }

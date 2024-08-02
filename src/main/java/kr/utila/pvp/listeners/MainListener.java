@@ -1,5 +1,6 @@
 package kr.utila.pvp.listeners;
 
+import kr.utila.pvp.Lang;
 import kr.utila.pvp.Main;
 import kr.utila.pvp.commands.PVPAdminCommand;
 import kr.utila.pvp.managers.UserManager;
@@ -15,10 +16,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -110,6 +108,21 @@ public class MainListener implements Listener {
         // 일시정지 상태에서 이동 방지
         getPVPRegion(user).ifPresent(pvpRegion -> {
             if(pvpRegion.getGameStatus().isNotMovable()) event.setCancelled(true);
+        });
+    }
+
+    // onCommand
+    @EventHandler
+    public void onCommand(PlayerCommandPreprocessEvent event) {
+        Player player = event.getPlayer();
+        String message = event.getMessage();
+        getPVPRegion(player).ifPresent(pvpRegion -> {
+            // /pvp or /PVP 로 시작하는게 아니면 cancel
+            if(!message.startsWith("/pvp") && !message.startsWith("/PVP") && !message.startsWith("/피브이피")) {
+                event.setCancelled(true);
+                // 안내 메시지 전송
+                Lang.send(player, Lang.CANNOT_USE_COMMAND);
+            }
         });
     }
 

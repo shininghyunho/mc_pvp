@@ -51,6 +51,8 @@ public class Lang {
     public static LangFormat WAITING_REPLAY_CANCEL;
     // GAME_TERMINATED
     public static LangFormat GAME_TERMINATED;
+    // CANNOT_USE_COMMAND
+    public static LangFormat CANNOT_USE_COMMAND;
 
     public static void load() {
         Main.getInstance().saveResource("lang.yml", true);
@@ -151,6 +153,7 @@ public class Lang {
         SEND_INVITATION = getNotNullLangFormat(yamlConfiguration, "SEND_INVITATION");
         WAITING_REPLAY_CANCEL = getNotNullLangFormat(yamlConfiguration, "WAITING_REPLAY_CANCEL");
         GAME_TERMINATED = getNotNullLangFormat(yamlConfiguration, "GAME_TERMINATED");
+        CANNOT_USE_COMMAND = getNotNullLangFormat(yamlConfiguration, "CANNOT_USE_COMMAND");
     }
 
     public static LangFormat getNotNullLangFormat(YamlConfiguration yamlConfiguration,String path) {
