@@ -479,6 +479,9 @@ public class PVPRegion implements Writable {
         logger.info("prepareCancel");
         gameStatus = GameStatus.NOT_STARTED;
         getMatchBossBar().ifPresent(BossBarEntity::clear);
+        // 상태 변수 초기화
+        regionPlayerUUIDMap.clear();
+        replayAcceptPlayers.clear();
     }
     /**
      * 플레이어들을 준비시키고 플레이어 목록을 반환
@@ -504,7 +507,7 @@ public class PVPRegion implements Writable {
             teleportToStartingLocation(player);
         }
     }
-    private List<Player> getPlayers() {
+    public List<Player> getPlayers() {
         return regionPlayerUUIDMap.values().stream()
                 .map(Bukkit::getPlayer)
                 .filter(Objects::nonNull)

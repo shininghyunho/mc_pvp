@@ -2,6 +2,7 @@ package kr.utila.pvp.objects;
 
 import kr.utila.pvp.Main;
 import kr.utila.pvp.managers.pvp.RegionManager;
+import kr.utila.pvp.objects.region.GameStatus;
 import kr.utila.pvp.objects.region.PVPRegion;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -113,6 +114,11 @@ public class User implements Writable {
         if(player == null) return false;
 
         PVPRegion pvpRegion = RegionManager.getInstance().get(PVPName);
-        return PVPName != null && pvpRegion == null;
+        if(pvpRegion == null) return true;
+
+        // 경기중 맴버중 포함되어있는지 여부
+        for(Player regionPlayer : pvpRegion.getPlayers()) if(regionPlayer.getUniqueId().equals(player.getUniqueId())) return false;
+
+        return true;
     }
 }
