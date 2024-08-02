@@ -267,19 +267,11 @@ public class PVPCommand {
     private static void readyPvpRegion(Player invitee) {
         PVPRegion pvpRegion = RegionManager.getInstance().getAvailableRegion();
         if(pvpRegion == null) return;
-        pvpRegion.regionPlayerUUIDMap.clear();
 
         Player inviter = getInviter(invitee);
         if(inviter == null) return;
-        // 랜덤으로 팀 설정
-        if(new Random().nextBoolean()) {
-            pvpRegion.setTeamToPlayer(TeamType.RED, invitee);
-            pvpRegion.setTeamToPlayer(TeamType.BLUE, inviter);
-        } else {
-            pvpRegion.setTeamToPlayer(TeamType.RED, inviter);
-            pvpRegion.setTeamToPlayer(TeamType.BLUE, invitee);
-        }
-        pvpRegion.start();
+
+        pvpRegion.start(inviter,invitee);
     }
     private static PVPRegion getPvpRegion(Player player) {
         // 경기중이 아니면 종료

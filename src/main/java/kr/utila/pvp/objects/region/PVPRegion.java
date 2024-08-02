@@ -18,6 +18,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -40,6 +41,7 @@ public class PVPRegion implements Writable {
     private final LocationDTO pos2;
     public final Map<TeamType, TeamRegion> teamRegionMap;
     public  final Map<TeamType, UUID> regionPlayerUUIDMap;
+    public final Map<UUID, Vector> playerDirectionMap = new HashMap<>();
     private GameStatus gameStatus;
     private final Set<UUID> replayAcceptPlayers = new HashSet<>();
     private final List<String> commands;
@@ -76,9 +78,7 @@ public class PVPRegion implements Writable {
     public GameStatus getGameStatus() {
         return gameStatus;
     }
-    public void setTeamToPlayer(TeamType teamType, Player player) {
-        regionPlayerUUIDMap.put(teamType, player.getUniqueId());
-    }
+
     public Optional<TeamType> getTeam(@NotNull Player player) {
         if (!containsPlayer(player)) return Optional.empty();
         return Optional.of(regionPlayerUUIDMap.get(TeamType.RED).equals(player.getUniqueId())
@@ -90,11 +90,14 @@ public class PVPRegion implements Writable {
     }
     public void restart() {
         logger.info("restart");
-        prepareMatch(false);
+        prepareMatch();
     }
-    public void start() {
+    public void start(Player player1, Player player2) {
         logger.info("start");
-        prepareMatch(true);
+        addPlayers(player1, player2);
+        setDirection();
+        getPlayers().forEach(player -> UserManager.getInstance().get(player).start(name));
+        prepareMatch();
     }
     public void waitPlayer(Player quitPlayer) {
         logger.info("waitPlayer");
@@ -277,9 +280,9 @@ public class PVPRegion implements Writable {
         return name;
     }
     // private methods
-    private void prepareMatch(boolean isNewGame) {
+    private void prepareMatch() {
         logger.info("prepareMatch");
-        setPlayersReady(isNewGame);
+        setPlayersReady();
         // 경기 초기화
         initializeMatch();
         // matchReplayCancelBossBar 초기화
@@ -463,6 +466,9 @@ public class PVPRegion implements Writable {
         logger.info("teleportToStartingLocation");
         if(player == null) return;
         getTeam(player).ifPresent(teamType -> player.teleport(teamRegionMap.get(teamType).startingLocation.toLocation()));
+        // 시야값 설정
+        var vector = playerDirectionMap.get(player.getUniqueId());
+        if(vector != null) player.getLocation().setDirection(vector);
     }
     /**
      * 상대방 플레이어를 반환
@@ -486,29 +492,27 @@ public class PVPRegion implements Writable {
     /**
      * 플레이어들을 준비시키고 플레이어 목록을 반환
      */
-    private void setPlayersReady(boolean isNewGame) {
+    private void setPlayersReady() {
         // 플레이어들 초기화
-        for (TeamType teamType: regionPlayerUUIDMap.keySet()) {
-            var uuid = regionPlayerUUIDMap.get(teamType);
-            // 새게임이면 User.start() 호출
-            User user = UserManager.getInstance().get(String.valueOf(uuid));
-            if (isNewGame) user.start(name);
-
-            TeamRegion teamRegion = teamRegionMap.get(teamType);
-            Player player = Bukkit.getPlayer(regionPlayerUUIDMap.get(teamType));
+        for(Player player : getPlayers()) {
             if(player == null) continue;
             // 인벤토리 초기화
             player.getInventory().clear();
             // 아이템 지급
+            var teamType = getTeam(player).orElse(null);
+            if(teamType == null) continue;
+            var teamRegion = teamRegionMap.get(teamType);
             if (teamRegion.itemPackage != null) teamRegion.itemPackage.forEach(itemStack -> player.getInventory().addItem(itemStack));
             // 체력, 포만도, 위치 초기화
             player.setHealth(player.getMaxHealth());
             player.setFoodLevel(20);
+            // 플레이어 위치 초기화
             teleportToStartingLocation(player);
         }
     }
     public List<Player> getPlayers() {
         return regionPlayerUUIDMap.values().stream()
+                .filter(Objects::nonNull)
                 .map(Bukkit::getPlayer)
                 .filter(Objects::nonNull)
                 .toList();
@@ -545,5 +549,19 @@ public class PVPRegion implements Writable {
         if(matchPausedBossBar != null) matchPausedBossBar.clear();
         if(!gameStatus.equals(GameStatus.PAUSED)) return;
         matchPausedBossBar = new BossBarEntity(getPlayers(), title, second, Config.WAITING_FOR_LEFT_USER_SECOND, BarColor.WHITE, BarStyle.SOLID);
+    }
+    private void setDirection() {
+        // set direction map
+        getPlayers().forEach(player -> playerDirectionMap.put(player.getUniqueId(), player.getLocation().getDirection()));
+    }
+    private void addPlayers(Player player1,Player player2) {
+        // 랜덤으로 팀 선정
+        List<TeamType> teamTypes = new ArrayList<>() {{
+            add(TeamType.RED);
+            add(TeamType.BLUE);
+        }};
+        Collections.shuffle(teamTypes);
+        regionPlayerUUIDMap.put(teamTypes.get(0), player1.getUniqueId());
+        regionPlayerUUIDMap.put(teamTypes.get(1), player2.getUniqueId());
     }
 }
