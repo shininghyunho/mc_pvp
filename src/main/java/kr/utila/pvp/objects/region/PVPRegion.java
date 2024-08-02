@@ -109,7 +109,7 @@ public class PVPRegion implements Writable {
     public void resume() {
         logger.info("resume");
         // 플레이어들에게 경기 재개 알림 메시지 전송
-        getPlayers().forEach(player -> Lang.send(player, Lang.RESTART, s -> s.replaceAll("%player%", player.getName())));
+        getPlayers().forEach(player -> Lang.send(player, Lang.RESTART));
         resumeMatch();
     }
     public void endMatch() {

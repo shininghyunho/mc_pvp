@@ -96,7 +96,7 @@ DRAW:
   subtitle: ""
 RESTART:
   text:
-    - "%player%님이 재접속하여 게임이 다시 시작됩니다"
+    - "게임이 다시 재개됩니다"
   title: ""
   subtitle: ""
 AVAILABLE_TO_GET_REWARD:
