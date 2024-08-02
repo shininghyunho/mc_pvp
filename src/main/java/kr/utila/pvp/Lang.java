@@ -65,7 +65,6 @@ public class Lang {
     }
 
     public static void send(Player player, LangFormat langFormat, Function<String, String> filter) {
-        logger.info("send message to id : " + player.getUniqueId()+" name : "+player.getName());
         for (String text : langFormat.text) {
             player.sendMessage(filter.apply(text));
         }

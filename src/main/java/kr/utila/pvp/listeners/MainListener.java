@@ -26,16 +26,12 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 public class MainListener implements Listener {
-    Logger logger = Logger.getLogger(MainListener.class.getName());
-
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         UserManager userManager = UserManager.getInstance();
         if(!userManager.exists(player)) userManager.register(player);
         User user = userManager.get(player);
-        // TEST
-        logger.info("onJoin : " + player.getName() + " : " + player.getUniqueId());
 
         // 탈주한 플레이어 처리
         if(user.isEscapingUser()) {

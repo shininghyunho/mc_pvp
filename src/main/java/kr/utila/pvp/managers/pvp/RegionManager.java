@@ -109,9 +109,6 @@ public class RegionManager extends Manager {
 
     @Override
     public void load() {
-        // TEST
-        logger.info("RegionManager load");
-
         PVP_REGIONS.clear();
 
         if(DIRECTORY.mkdir()) return;

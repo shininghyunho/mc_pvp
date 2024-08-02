@@ -103,14 +103,6 @@ public class PVPCommand {
                             
                             // 준비된 경기장이 없을 때
                             if (!RegionManager.getInstance().hasAvailableSpace()) {
-                                // TEST
-                                // 모든 경기장 정보 출력
-                                RegionManager.getInstance().getAllRegions().forEach((region) -> {
-                                    // name print
-                                    logger.info("name : "+region.getName());
-                                    // gameStatus print
-                                    logger.info("gameStatus : "+region.getGameStatus());
-                                });
                                 Lang.send(invitee, Lang.NON_AVAILABLE_PLACE);
                                 break;
                             }
@@ -221,7 +213,6 @@ public class PVPCommand {
 
         var inviterId = inviter.getUniqueId();
         var inviteeId = invitee.getUniqueId();
-        logger.info("inviterId : "+inviterId+" inviteeId : "+inviteeId);
         inviterMap.put(inviteeId, inviterId);
         inviteeMap.put(inviterId, inviteeId);
     }
@@ -247,14 +238,12 @@ public class PVPCommand {
     // delete invitee
     private static void deleteInvitee(Player invitee) {
         if(invitee == null) return;
-        logger.info("deleteInvitee : "+invitee.getUniqueId());
         if(!isInvitee(invitee)) return;
         inviterMap.remove(invitee.getUniqueId());
     }
     // delete inviter
     private static void deleteInviter(Player inviter) {
         if(inviter == null) return;
-        logger.info("deleteInviter : "+inviter.getUniqueId());
         if(!isInviter(inviter)) return;
         inviteeMap.remove(inviter.getUniqueId());
     }
@@ -299,7 +288,6 @@ public class PVPCommand {
     }
     // clear invite
     public static void clearInvite() {
-        logger.info("clear invite info");
         inviterMap.clear();
         inviteeMap.clear();
     }

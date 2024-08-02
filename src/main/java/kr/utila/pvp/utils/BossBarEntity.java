@@ -41,9 +41,6 @@ public class BossBarEntity {
 
     // set
     private void set(int second, int totalSecond, String title) {
-        // print all players
-        bossBar.getPlayers().forEach(player -> logger.info(player.getName()));
-
         double progress = (double) second / totalSecond;
         setProgress(progress);
         setTitle(title.replaceAll("%second%", String.valueOf(second)));
