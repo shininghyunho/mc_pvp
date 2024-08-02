@@ -39,28 +39,28 @@ public class PVPRegion implements Writable {
     private final LocationDTO pos1;
     private final LocationDTO pos2;
     public final Map<TeamType, TeamRegion> teamRegionMap;
-    public  final Map<TeamType, String> regionPlayerUniqueIdMap;
+    public  final Map<TeamType, UUID> regionPlayerUUIDMap;
     private GameStatus gameStatus;
     private final Set<UUID> replayAcceptPlayers = new HashSet<>();
-    public int remainSecond;
     private final List<String> commands;
     public BossBarEntity matchBossBar;
     public BossBarEntity matchReplayCancelBossBar;
+    public BossBarEntity matchPausedBossBar;
     private GameStatus priorGameStatus;
 
-    private int second = 0;
+    private int matchSecond = 0;
+    private int pauseSecond = 0;
 
     public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2) {
-        this(name, pos1, pos2, new HashMap<>(), new HashMap<>(), GameStatus.NOT_STARTED, 0, new ArrayList<>());
+        this(name, pos1, pos2, new HashMap<>(), new HashMap<>(), GameStatus.NOT_STARTED, new ArrayList<>());
     }
-    public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2, Map<TeamType, TeamRegion> teamRegionMap, Map<TeamType, String> regionPlayerUniqueIdMap, GameStatus gameStatus, int remainSecond, List<String> commands) {
+    public PVPRegion(String name, LocationDTO pos1, LocationDTO pos2, Map<TeamType, TeamRegion> teamRegionMap, Map<TeamType, UUID> regionPlayerUUIDMap, GameStatus gameStatus, List<String> commands) {
         this.name = name;
         this.pos1 = pos1;
         this.pos2 = pos2;
         this.teamRegionMap = teamRegionMap;
-        this.regionPlayerUniqueIdMap = regionPlayerUniqueIdMap;
+        this.regionPlayerUUIDMap = regionPlayerUUIDMap;
         this.gameStatus = gameStatus;
-        this.remainSecond = remainSecond;
         this.commands = commands;
     }
     // inner class
@@ -77,47 +77,49 @@ public class PVPRegion implements Writable {
         return gameStatus;
     }
     public void setTeamToPlayer(TeamType teamType, Player player) {
-        regionPlayerUniqueIdMap.put(teamType, player.getUniqueId().toString());
+        regionPlayerUUIDMap.put(teamType, player.getUniqueId());
     }
     public Optional<TeamType> getTeam(@NotNull Player player) {
         if (!containsPlayer(player)) return Optional.empty();
-        return Optional.of(regionPlayerUniqueIdMap.get(TeamType.RED).equals(player.getUniqueId().toString())
+        return Optional.of(regionPlayerUUIDMap.get(TeamType.RED).equals(player.getUniqueId())
                 ? TeamType.RED
                 : TeamType.BLUE);
     }
     public boolean containsPlayer(Player player) {
-        return regionPlayerUniqueIdMap.containsValue(player.getUniqueId().toString());
+        return regionPlayerUUIDMap.containsValue(player.getUniqueId());
     }
     public void restart() {
+        logger.info("restart");
         prepareMatch(false);
     }
     public void start() {
+        logger.info("start");
         prepareMatch(true);
     }
     public void waitPlayer(Player quitPlayer) {
+        logger.info("waitPlayer");
         pauseMatch();
         getOpponent(quitPlayer).ifPresent(opponent -> {
             // 상대 플레이어를 스타팅 지역으로 이동
             teleportToStartingLocation(opponent);
             // 나간 플레이어가 다시 접속할 때까지 대기
-            waitPlayerTimer(opponent, quitPlayer);
+            waitLeftPlayerTimer(opponent, quitPlayer);
         });
     }
-    public void pause() {
-        pauseMatch();
-    }
     public void resume() {
+        logger.info("resume");
         // 플레이어들에게 경기 재개 알림 메시지 전송
         getPlayers().forEach(player -> Lang.send(player, Lang.RESTART, s -> s.replaceAll("%player%", player.getName())));
         resumeMatch();
     }
     public void endMatch() {
+        logger.info("endMatch");
         // 게임중이 아니었다면 종료
         if (!gameStatus.equals(GameStatus.MATCH_IN_PROGRESS)) return;
         gameStatus = GameStatus.MATCH_REPLAY_REQUESTED;
 
-        Player player1 = Bukkit.getPlayer(UUID.fromString(regionPlayerUniqueIdMap.get(TeamType.RED)));
-        Player player2 = Bukkit.getPlayer(UUID.fromString(regionPlayerUniqueIdMap.get(TeamType.BLUE)));
+        Player player1 = Bukkit.getPlayer(regionPlayerUUIDMap.get(TeamType.RED));
+        Player player2 = Bukkit.getPlayer(regionPlayerUUIDMap.get(TeamType.BLUE));
 
         if (player1 == null || player2 == null) {
             // 플레이어를 찾을 수 없으면 게임 취소
@@ -126,7 +128,7 @@ public class PVPRegion implements Writable {
         }
 
         // boss bar 삭제
-        matchBossBar.clear();
+        getMatchBossBar().ifPresent(BossBarEntity::clear);
 
         double player1Health = player1.getHealth();
         double player2Health = player2.getHealth();
@@ -141,6 +143,7 @@ public class PVPRegion implements Writable {
         }
     }
     public void replayWhenNotDraw(Player winner, Player loser) {
+        logger.info("replayWhenNotDraw");
         prepareMatchReplayRequest();
         // 승자, 패자 플레이어를 스타팅 지역으로 이동
         teleportToStartingLocation(winner);
@@ -154,10 +157,11 @@ public class PVPRegion implements Writable {
         Lang.sendClickableCommand(loser, Lang.ASK_REPLAY);
     }
     private void replayWhenDraw() {
+        logger.info("replayWhenDraw");
         prepareMatchReplayRequest();
         // 플레이어들을 스타팅 지역으로 이동
-        regionPlayerUniqueIdMap.values().forEach(uuid -> {
-            Player player = Bukkit.getPlayer(UUID.fromString(uuid));
+        regionPlayerUUIDMap.values().forEach(uuid -> {
+            Player player = Bukkit.getPlayer(uuid);
             teleportToStartingLocation(player);
 
             Lang.send(player, Lang.DRAW);
@@ -165,6 +169,7 @@ public class PVPRegion implements Writable {
         });
     }
     public void cancelGameByLogout(OfflinePlayer offlinePlayer) {
+        logger.info("cancelGameByLogout : "+offlinePlayer.getName());
         prepareCancel();
 
         if (offlinePlayer.getPlayer() == null) return;
@@ -175,10 +180,11 @@ public class PVPRegion implements Writable {
         });
     }
     public void cancelGameByReject(Player rejectingPlayer) {
+        logger.info("cancelGameByReject : "+rejectingPlayer.getName());
         prepareCancel();
 
-        regionPlayerUniqueIdMap.values().forEach(uuid -> {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
+        regionPlayerUUIDMap.values().forEach(uuid -> {
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
             // 온라인 플레이어면 quit()
             if(offlinePlayer.getPlayer() != null) UserManager.getInstance().get(offlinePlayer.getPlayer()).quit();
             // 오프라인 플레이어면 거절 메시지 전송
@@ -186,23 +192,18 @@ public class PVPRegion implements Writable {
         });
     }
     public void cancelGame() {
+        logger.info("cancelGame");
         prepareCancel();
 
-        regionPlayerUniqueIdMap.values().forEach(uuid -> {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
-            // 온라인 플레이어면 quit()
-            if(offlinePlayer.getPlayer() != null) {
-                UserManager.getInstance().get(offlinePlayer.getPlayer()).quit();
-                Lang.send(offlinePlayer.getPlayer(), Lang.GAME_TERMINATED);
-            }
-        });
+        getPlayers().forEach(player -> {
+                    Lang.send(player, Lang.GAME_TERMINATED);
+                    UserManager.getInstance().get(player).quit();
+                });
     }
     @Override
     public void write() {
-        // TEST
-        logger.info("Region write :"+name);
-
         if(name == null) return;
+        logger.info("write : "+name);
         final File PATH = new File(DIRECTORY, name + ".yml");
         YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(PATH);
         // name
@@ -227,8 +228,7 @@ public class PVPRegion implements Writable {
         // regionPlayer
         if(gameStatus.isInGame()) {
             ConfigurationSection gamingSection = yamlConfiguration.createSection("regionPlayer");
-            regionPlayerUniqueIdMap.forEach((teamType, uuid) -> gamingSection.set(teamType.name(), uuid));
-            yamlConfiguration.set("remainSecond", remainSecond);
+            regionPlayerUUIDMap.forEach((teamType, uuid) -> gamingSection.set(teamType.name(), uuid));
         }
         // commands
         if(!yamlConfiguration.contains(COMMANDS)) yamlConfiguration.set(COMMANDS, new ArrayList<>(List.of("tellraw @p \"경기장 초기화 예시\"")));
@@ -255,7 +255,14 @@ public class PVPRegion implements Writable {
     public Optional<BossBarEntity> getMatchBossBar() {
         return Optional.ofNullable(matchBossBar);
     }
+    public Optional<BossBarEntity> getMatchReplayCancelBossBar() {
+        return Optional.ofNullable(matchReplayCancelBossBar);
+    }
+    public Optional<BossBarEntity> getMatchPausedBossBar() {
+        return Optional.ofNullable(matchPausedBossBar);
+    }
     public void replayAccept(Player player) {
+        logger.info("replayAccept : "+player.getName());
         replayAcceptPlayers.add(player.getUniqueId());
         if (replayAcceptPlayers.size() == 2) {
             replayAcceptPlayers.clear();
@@ -271,72 +278,123 @@ public class PVPRegion implements Writable {
     }
     // private methods
     private void prepareMatch(boolean isNewGame) {
-        // 경기에 참가하는 플레이어 목록
-        List<Player> players = getReadyPlayers(isNewGame);
-        if (players == null) return;
+        logger.info("prepareMatch");
+        setPlayersReady(isNewGame);
         // 경기 초기화
-        initializeMatch(players);
+        initializeMatch();
         // matchReplayCancelBossBar 초기화
-        if(matchReplayCancelBossBar != null) matchReplayCancelBossBar.clear();
+        getMatchReplayCancelBossBar().ifPresent(BossBarEntity::clear);
     }
-    private void initializeMatch(@NotNull List<Player> players) {
+    private void initializeMatch() {
+        logger.info("initializeMatch");
         gameStatus = GameStatus.MATCH_INITIALIZED;
         replayAcceptPlayers.clear();
         executeCommands();
-        initializeMatchTimer(players);
+        initializeMatchTimer();
     }
-    private void initializeMatchTimer(@NotNull List<Player> players) {
-        second = Config.MATCH_INITIALIZED_SECOND;
+    private void initializeMatchTimer() {
+        logger.info("initializeMatchTimer");
+        matchSecond = Config.MATCH_INITIALIZED_SECOND;
         new BukkitRunnable() {
             @Override
             public void run() {
+                logger.info("initializeMatchTimer run second : "+ matchSecond);
                 if(gameStatus.equals(GameStatus.PAUSED)) return;
-
-                if (second-- <= 0) {
-                    players.forEach(player -> Lang.send(player, Lang.RESET_GAME));
-                    // 경기 대기
-                    waitMatch(players);
+                if(!gameStatus.equals(GameStatus.MATCH_INITIALIZED)) {
                     cancel();
                 }
-                else players.forEach(player -> Lang.send(player, Lang.WAITING_RESET_GAME, s -> s.replaceAll("%seconds%", second + "")));
+
+                if (matchSecond-- <= 0) {
+                    getPlayers().forEach(player -> Lang.send(player, Lang.RESET_GAME));
+                    // 경기 대기
+                    waitMatch();
+                    cancel();
+                }
+                else getPlayers().forEach(player -> Lang.send(player, Lang.WAITING_RESET_GAME, s -> s.replaceAll("%seconds%", matchSecond + "")));
             }
         }.runTaskTimer(Main.getInstance(), 0, 20);
     }
-    private void waitMatch(@NotNull List<Player> players) {
+    private void waitMatch() {
+        logger.info("waitMatch");
         gameStatus = GameStatus.MATCH_WAITING;
-        waitMatchTimer(players);
+        waitMatchTimer();
     }
-    private void waitMatchTimer(@NotNull List<Player> players) {
-        second = Config.MATCH_WAITING_SECOND;
+    private void waitMatchTimer() {
+        logger.info("waitMatchTimer");
+        matchSecond = Config.MATCH_WAITING_SECOND;
         new BukkitRunnable() {
             @Override
             public void run() {
+                logger.info("waitMatchTimer run second : "+ matchSecond);
                 if(gameStatus.equals(GameStatus.PAUSED)) return;
+                if(!gameStatus.equals(GameStatus.MATCH_WAITING)) {
+                    cancel();
+                }
 
-                if (second-- <= 0) {
-                    players.forEach(player -> Lang.send(player, Lang.START_GAME));
+                if (matchSecond-- <= 0) {
+                    getPlayers().forEach(player -> Lang.send(player, Lang.START_GAME));
                     startMatch();
                     cancel();
                 }
-                else players.forEach(player -> Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", second + "")));
+                else getPlayers().forEach(player -> Lang.send(player, Lang.WAITING_STARTING_GAME, s -> s.replaceAll("%seconds%", matchSecond + "")));
+            }
+        }.runTaskTimer(Main.getInstance(), 0, 20);
+    }
+    /**
+     * 경기 시작
+     */
+    private void startMatch() {
+        logger.info("startMatch");
+        gameStatus = GameStatus.MATCH_IN_PROGRESS;
+        startMatchTimer();
+    }
+    private void startMatchTimer() {
+        logger.info("startMatchTimer");
+        matchBossBar = new BossBarEntity(getPlayers());
+        getMatchBossBar().ifPresent(BossBarEntity::start);
+        
+        matchSecond = Config.MATCH_SECOND;
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                logger.info("startMatchTimer run second : "+ matchSecond);
+                logger.info("gameStatus : "+gameStatus);
+                if(gameStatus.equals(GameStatus.PAUSED)) return;
+                if(!gameStatus.equals(GameStatus.MATCH_IN_PROGRESS)) {
+                    getMatchBossBar().ifPresent(BossBarEntity::clear);
+                    cancel();
+                }
+                matchSecond--;
+                getMatchBossBar().ifPresent(bossBar -> bossBar.update(matchSecond, Config.MATCH_SECOND, Config.MATCH_IN_PROGRESS_BOSSBAR_TITLE));
+                if (matchSecond <= 0) {
+                    endMatch();
+                    getMatchBossBar().ifPresent(BossBarEntity::clear);
+                    cancel();
+                }
+                else if(matchSecond % 10 == 0) getPlayers().forEach(player -> Lang.send(player, Lang.BROADCAST_REMAIN_COUNT, s -> s.replaceAll("%second%", matchSecond + "")));
             }
         }.runTaskTimer(Main.getInstance(), 0, 20);
     }
     private void replayMatchCancelTimer() {
-        second = Config.MATCH_REPLAY_CANCEL_SECOND;
+        logger.info("replayMatchCancelTimer");
+        matchSecond = Config.MATCH_REPLAY_CANCEL_SECOND;
         // ready match cancel boss bar
-        matchReplayCancelBossBar = new BossBarEntity(getPlayers(), BarColor.YELLOW, BarStyle.SOLID);
-        matchReplayCancelBossBar.start();
-
+        matchReplayCancelBossBar = new BossBarEntity(getPlayers(),Config.MATCH_REPLAY_CANCEL_BOSSBAR_TITLE.replaceAll("%second%",String.valueOf(Config.MATCH_REPLAY_CANCEL_SECOND)), BarColor.YELLOW, BarStyle.SOLID);
+        getMatchReplayCancelBossBar().ifPresent(BossBarEntity::start);
         new BukkitRunnable() {
             @Override
             public void run() {
+                logger.info("replayMatchCancelTimer run second : "+ matchSecond);
                 if(gameStatus.equals(GameStatus.PAUSED)) return;
-                second--;
-                matchReplayCancelBossBar.update(second , Config.MATCH_REPLAY_CANCEL_SECOND, Config.MATCH_REPLAY_CANCEL_BOSSBAR_TITLE);
-                if (second <= 0) {
+                if(!gameStatus.equals(GameStatus.MATCH_REPLAY_REQUESTED)) {
+                    getMatchReplayCancelBossBar().ifPresent(BossBarEntity::clear);
+                    cancel();
+                }
+                matchSecond--;
+                getMatchReplayCancelBossBar().ifPresent(bossBar -> bossBar.update(matchSecond, Config.MATCH_REPLAY_CANCEL_SECOND, Config.MATCH_REPLAY_CANCEL_BOSSBAR_TITLE));
+                if (matchSecond <= 0) {
                     cancelGame();
-                    matchReplayCancelBossBar.clear();
+                    getMatchReplayCancelBossBar().ifPresent(BossBarEntity::clear);
                     cancel();
                 }
             }
@@ -347,22 +405,31 @@ public class PVPRegion implements Writable {
      * 나간 플레이어가 다시 접속하면 gameStatus 를 MATCH_IN_PROGRESS 로 변경 후 경기 재개 <br><br>
      * 대기시간이 초과하면 gameStatus 를 NOT_STARTED 로 변경 후 종료
      */
-    private void waitPlayerTimer(Player waitPlayer, Player quitPlayer) {
+    private void waitLeftPlayerTimer(Player waitPlayer, Player quitPlayer) {
+        logger.info("waitLeftPlayerTimer");
         // 나간 플레이어가 다시 접속할 때까지 대기
-        second = Config.WAITING_FOR_LEFT_USER_SECOND;
+        pauseSecond = Config.WAITING_FOR_LEFT_USER_SECOND;
+        matchPausedBossBar = new BossBarEntity(getPlayers(), Config.WAITING_FOR_LEFT_USER_BOSSBAR_TITLE.replaceAll("%second%",String.valueOf(Config.WAITING_FOR_LEFT_USER_SECOND)), BarColor.WHITE, BarStyle.SOLID);
+        getMatchPausedBossBar().ifPresent(BossBarEntity::start);
         new BukkitRunnable() {
             @Override
             public void run() {
-                // 나갔던 유저가 다시 접속하면 종료
-                if (quitPlayer.isOnline()) cancel();
-                // 대기해도 안들어오면 경기 종료
-                if (second-- <= 0)  {
-                    giveReward(waitPlayer, quitPlayer);
-                    cancelGame();
+                logger.info("waitLeftPlayerTimer run second : "+pauseSecond);
+                logger.info("gameStatus : "+gameStatus);
+                if(!gameStatus.equals(GameStatus.PAUSED)) {
+                    getMatchPausedBossBar().ifPresent(BossBarEntity::clear);
                     cancel();
                 }
-                // 대기중인 플레이어에게 메시지 전송
-                else Lang.send(waitPlayer, Lang.WAITING_PLAYER, s -> s.replaceAll("%player%", quitPlayer.getName()).replaceAll("%second%", second + ""));
+
+                // 대기해도 안들어오면 경기 종료
+                pauseSecond--;
+                getMatchPausedBossBar().ifPresent(bossBar -> bossBar.update(pauseSecond, Config.WAITING_FOR_LEFT_USER_SECOND, Config.WAITING_FOR_LEFT_USER_BOSSBAR_TITLE));
+                if (pauseSecond <= 0)  {
+                    giveReward(waitPlayer, quitPlayer);
+                    cancelGame();
+                    getMatchPausedBossBar().ifPresent(BossBarEntity::clear);
+                    cancel();
+                }
             }
         }.runTaskTimer(Main.getInstance(), 0, 20);
     }
@@ -397,6 +464,7 @@ public class PVPRegion implements Writable {
      * @param player 플레이어
      */
     private void teleportToStartingLocation(Player player) {
+        logger.info("teleportToStartingLocation");
         if(player == null) return;
         getTeam(player).ifPresent(teamType -> player.teleport(teamRegionMap.get(teamType).startingLocation.toLocation()));
     }
@@ -406,36 +474,29 @@ public class PVPRegion implements Writable {
      */
     public Optional<Player> getOpponent(@NotNull Player player) {
         return getTeam(player)
-                .map(teamType -> Bukkit.getPlayer(UUID.fromString(regionPlayerUniqueIdMap.get(teamType))));
+                .map(teamType -> Bukkit.getPlayer(regionPlayerUUIDMap.get(teamType)));
     }
     /**
      * 게임 취소 준비, 게임 상태를 NOT_STARTED 로 변경하고 보스바 타이머를 중지
      */
     private void prepareCancel() {
+        logger.info("prepareCancel");
         gameStatus = GameStatus.NOT_STARTED;
-        matchBossBar.clear();
+        getMatchBossBar().ifPresent(BossBarEntity::clear);
     }
     /**
      * 플레이어들을 준비시키고 플레이어 목록을 반환
      */
-    private List<Player> getReadyPlayers(boolean isNewGame) {
-        // 경기에 참가하는 플레이어 목록
-        List<Player> players = new ArrayList<>();
+    private void setPlayersReady(boolean isNewGame) {
         // 플레이어들 초기화
-        for (TeamType teamType: regionPlayerUniqueIdMap.keySet()) {
-            String uuid = regionPlayerUniqueIdMap.get(teamType);
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
-            // 오프라인 플레이어면 취소
-            if (!offlinePlayer.isOnline()) {
-                cancelGameByLogout(offlinePlayer);
-                return null;
-            }
+        for (TeamType teamType: regionPlayerUUIDMap.keySet()) {
+            var uuid = regionPlayerUUIDMap.get(teamType);
             // 새게임이면 User.start() 호출
-            User user = UserManager.getInstance().get(uuid);
+            User user = UserManager.getInstance().get(String.valueOf(uuid));
             if (isNewGame) user.start(name);
 
             TeamRegion teamRegion = teamRegionMap.get(teamType);
-            Player player = offlinePlayer.getPlayer();
+            Player player = Bukkit.getPlayer(regionPlayerUUIDMap.get(teamType));
             if(player == null) continue;
             // 인벤토리 초기화
             player.getInventory().clear();
@@ -445,38 +506,39 @@ public class PVPRegion implements Writable {
             player.setHealth(player.getMaxHealth());
             player.setFoodLevel(20);
             teleportToStartingLocation(player);
-            // 플레이어 추가
-            players.add(player);
         }
-        return players;
     }
     private List<Player> getPlayers() {
-        return regionPlayerUniqueIdMap.values().stream()
-                .map(UUID::fromString)
+        return regionPlayerUUIDMap.values().stream()
                 .map(Bukkit::getPlayer)
                 .filter(Objects::nonNull)
                 .toList();
     }
-
-    /**
-     * 경기 시작
-     */
-    private void startMatch() {
-        remainSecond = Config.MATCH_SECOND;
-        gameStatus = GameStatus.MATCH_IN_PROGRESS;
-        setBossBarEntity();
-    }
-    private void setBossBarEntity() {
-        matchBossBar = new BossBarEntity(getPlayers());
-        matchBossBar.start();
-    }
     private void resumeMatch() {
-        matchBossBar.start();
+        logger.info("resumeMatch");
+        startBossBar();
         gameStatus = priorGameStatus;
     }
     private void pauseMatch() {
-        matchBossBar.pause();
+        logger.info("pauseMatch");
+        pauseBossBar();
         priorGameStatus = gameStatus;
         gameStatus = GameStatus.PAUSED;
+    }
+    private void startBossBar() {
+        logger.info("startBossBar");
+        getMatchPausedBossBar().ifPresent(BossBarEntity::clear);
+        switch (gameStatus) {
+            case MATCH_IN_PROGRESS -> getMatchBossBar().ifPresent(BossBarEntity::start);
+            case MATCH_REPLAY_REQUESTED -> getMatchReplayCancelBossBar().ifPresent(BossBarEntity::start);
+        }
+    }
+    private void pauseBossBar() {
+        logger.info("pauseBossBar");
+        getMatchPausedBossBar().ifPresent(BossBarEntity::start);
+        switch (gameStatus) {
+            case MATCH_IN_PROGRESS -> getMatchBossBar().ifPresent(BossBarEntity::pause);
+            case MATCH_REPLAY_REQUESTED -> getMatchReplayCancelBossBar().ifPresent(BossBarEntity::pause);
+        }
     }
 }

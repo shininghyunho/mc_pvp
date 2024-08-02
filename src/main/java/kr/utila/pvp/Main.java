@@ -10,7 +10,10 @@ import kr.utila.pvp.managers.pvp.RewardManager;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.logging.Logger;
+
 public final class Main extends JavaPlugin {
+    Logger logger = Logger.getLogger(Main.class.getName());
 
     public static NamespacedKey key;
 
@@ -29,8 +32,6 @@ public final class Main extends JavaPlugin {
         registerEvents();
         executeCommands();
         load();
-
-        GameTimer.run();
     }
 
     @Override
@@ -60,7 +61,7 @@ public final class Main extends JavaPlugin {
             RegionManager.getInstance().load();
             UserManager.getInstance().load();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warning("데이터 로드 중 오류가 발생했습니다.");
         }
     }
 }

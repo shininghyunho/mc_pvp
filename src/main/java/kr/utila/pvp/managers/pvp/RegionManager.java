@@ -155,17 +155,17 @@ public class RegionManager extends Manager {
                         ? GameStatus.valueOf(yaml.getString("gameStatus"))
                         : GameStatus.NOT_STARTED;
                 // regionPlayer
-                var regionPlayerMap = new HashMap<TeamType, String>();
-                var remainSecond = 0;
+                var regionPlayerMap = new HashMap<TeamType, UUID>();
                 if (yaml.contains("regionPlayer")) {
-                    var gamingSection = yaml.getConfigurationSection("regionPlayer");
-                    if (gamingSection != null) {
-                        gamingSection.getKeys(false).forEach(team -> regionPlayerMap.put(TeamType.valueOf(team), gamingSection.getString(team)));
-                        remainSecond = yaml.getInt("remainSecond");
-                    }
+                    var regionPlayerSection = yaml.getConfigurationSection("regionPlayer");
+                    if (regionPlayerSection != null) regionPlayerSection.getKeys(false).forEach(team -> {
+                        if(regionPlayerSection.getString(team)!=null) {
+                            regionPlayerMap.put(TeamType.valueOf(team), UUID.fromString(Objects.requireNonNull(regionPlayerSection.getString(team))));
+                        }
+                    });
                 }
                 // PVP_REGIONS 에 추가
-                PVP_REGIONS.put(name, new PVPRegion(name, pos1, pos2, teamRegions, regionPlayerMap, gameStatus, remainSecond, commands));
+                PVP_REGIONS.put(name, new PVPRegion(name, pos1, pos2, teamRegions, regionPlayerMap, gameStatus, commands));
             });
         });
     }

@@ -1,13 +1,13 @@
 # 매치 초기화 시간
-MATCH_INITIALIZED_SECOND: 5
+MATCH_INITIALIZED_SECOND: 15
 # 매치 대기 시간
-MATCH_WAITING_SECOND: 5
+MATCH_WAITING_SECOND: 15
 # 매치 시간
 MATCH_SECOND: 15
 # 매치 재시작 취소 시간
-MATCH_REPLAY_CANCEL_SECOND: 10
+MATCH_REPLAY_CANCEL_SECOND: 15
 # 탈주한 유저  대기 시간
-WAITING_FOR_LEFT_USER_SECOND: 5
+WAITING_FOR_LEFT_USER_SECOND: 15
 # 클릭할 수 있는 버튼 메시지
 CLICK_MESSAGE:
   ACCEPT_YES: "PVP 수락하기 버튼"
@@ -15,6 +15,8 @@ CLICK_MESSAGE:
   REPLAY_YES: "재시작 수락하기 버튼"
   REPLAY_NO: "재시작 거절하기 버튼"
 # 매치 경기중 보스바 타이틀
-MATCH_IN_PROGRESS_BOSSBAR_TITLE: "%SECOND% 초 남았습니다."
+MATCH_IN_PROGRESS_BOSSBAR_TITLE: "%second% 초 남았습니다."
 # 매치 재시작 취소 보스바 타이틀
-MATCH_REPLAY_CANCEL_BOSSBAR_TITLE: "%SECOND% 초 후 경기가 종료됩니다."
+MATCH_REPLAY_CANCEL_BOSSBAR_TITLE: "%second% 초 후 경기가 종료됩니다."
+# 탈주한 유저 대기중 보스바 타이틀
+WAITING_FOR_LEFT_USER_BOSSBAR_TITLE: "나간 유저 대기 중 남은 시간 : %second% 초"

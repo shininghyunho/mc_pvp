@@ -9,8 +9,10 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.util.List;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 public class Lang {
+    static Logger logger = Logger.getLogger(Lang.class.getName());
     private static final File FILE = new File(Main.getInstance().getDataFolder(), "lang.yml");
 
     public static LangFormat PVP_CANCEL_BY_LOGOUT;
@@ -61,6 +63,7 @@ public class Lang {
     }
 
     public static void send(Player player, LangFormat langFormat, Function<String, String> filter) {
+        logger.info("send message to id : " + player.getUniqueId()+" name : "+player.getName());
         for (String text : langFormat.text) {
             player.sendMessage(filter.apply(text));
         }

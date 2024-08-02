@@ -36,6 +36,11 @@ public class Config {
      * 매치 재시작 취소 보스바 타이틀
      */
     public static String MATCH_REPLAY_CANCEL_BOSSBAR_TITLE;
+    // WAITING_FOR_LEFT_USER_BOSSBAR_TITLE
+    /**
+     * 탈주한 유저 대기 보스바 타이틀
+     */
+    public static String WAITING_FOR_LEFT_USER_BOSSBAR_TITLE;
 
     public static void load() {
         PLUGIN.saveDefaultConfig();
@@ -51,8 +56,9 @@ public class Config {
         MATCH_SECOND = getNonNullValue(config, "MATCH_SECOND", 60);
         WAITING_FOR_LEFT_USER_SECOND = getNonNullValue(config, "WAITING_FOR_LEFT_USER_SECOND", 15);
         MATCH_REPLAY_CANCEL_SECOND = getNonNullValue(config, "MATCH_REPLAY_CANCEL_SECOND", 10);
-        MATCH_IN_PROGRESS_BOSSBAR_TITLE = getNonNullValue(config, "MATCH_BOSSBAR_TITLE", "%SECOND% 초 남았습니다.");
-        MATCH_REPLAY_CANCEL_BOSSBAR_TITLE = getNonNullValue(config, "MATCH_REPLAY_CANCEL_BOSSBAR_TITLE", "%SECOND% 초 후 경기가 종료됩니다.");
+        MATCH_IN_PROGRESS_BOSSBAR_TITLE = getNonNullValue(config, "MATCH_BOSSBAR_TITLE", "%second% 초 남았습니다.");
+        MATCH_REPLAY_CANCEL_BOSSBAR_TITLE = getNonNullValue(config, "MATCH_REPLAY_CANCEL_BOSSBAR_TITLE", "%second% 초 후 경기가 종료됩니다.");
+        WAITING_FOR_LEFT_USER_BOSSBAR_TITLE = getNonNullValue(config, "WAITING_FOR_LEFT_USER_BOSSBAR_TITLE", "나간 유저 대기 중 남은 시간 : %second% 초");
     }
 
     public static class ClickableValue {

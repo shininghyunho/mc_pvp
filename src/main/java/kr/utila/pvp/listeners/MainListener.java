@@ -25,8 +25,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Optional;
+import java.util.logging.Logger;
 
 public class MainListener implements Listener {
+    Logger logger = Logger.getLogger(MainListener.class.getName());
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
@@ -34,6 +36,8 @@ public class MainListener implements Listener {
         UserManager userManager = UserManager.getInstance();
         if(!userManager.exists(player)) userManager.register(player);
         User user = userManager.get(player);
+        // TEST
+        logger.info("onJoin : " + player.getName() + " : " + player.getUniqueId());
 
         // 탈주한 플레이어 처리
         if(user.isEscapingUser()) {
@@ -51,11 +55,10 @@ public class MainListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         getPVPRegion(player).ifPresent(pvpRegion -> {
-            // 게임중이면 일시정지
-            if(pvpRegion.getGameStatus().isInGame()) pvpRegion.pause();
             // 이미 일시정지 이면 취소
-            else if(pvpRegion.getGameStatus().equals(GameStatus.PAUSED)) pvpRegion.cancelGameByReject(player);
-            else pvpRegion.waitPlayer(player);
+            if(pvpRegion.getGameStatus().equals(GameStatus.PAUSED)) pvpRegion.cancelGameByReject(player);
+            // 게임중이면 일시정지
+            else if(pvpRegion.getGameStatus().isInGame() && !pvpRegion.getGameStatus().equals(GameStatus.PAUSED)) pvpRegion.waitPlayer(player);
         });
     }
 

@@ -7,7 +7,6 @@ package kr.utila.pvp.objects.region;
  */
 public enum GameStatus {
     NOT_STARTED("게임_안함"),
-    REQUESTED("게임_신청"),
     MATCH_INITIALIZED("경기_초기화"),
     MATCH_WAITING("경기_대기"),
     MATCH_IN_PROGRESS("경기_중"),
@@ -26,7 +25,7 @@ public enum GameStatus {
 
     // is in game
     public  boolean isInGame() {
-        return this != NOT_STARTED && this != REQUESTED;
+        return this != NOT_STARTED;
     }
 
     // isNotMovable
